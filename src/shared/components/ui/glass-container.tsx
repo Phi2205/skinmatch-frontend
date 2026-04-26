@@ -1,20 +1,55 @@
-import { cn } from "@/shared/utils/format";
-import React from "react";
+"use client"
 
-interface GlassContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode;
+import type React from "react"
+
+interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: "default" | "sm" | "lg" | "none"
+  interactive?: boolean
+  blur?: number
+  opacity?: number
+  borderOpacity?: number
+  borderRadius?: number
 }
 
-export function GlassContainer({ children, className, ...props }: GlassContainerProps) {
+export function GlassCard({
+  children,
+  className = "",
+  variant = "default",
+  interactive = false,
+  blur,
+  opacity,
+  borderOpacity,
+  borderRadius,
+  style,
+  ...props
+}: GlassCardProps) {
+  const baseStyles =
+    "backdrop-blur-xl bg-white/20 border border-white/20 rounded-2xl shadow-xl transition-all duration-300"
+
+  const variantStyles = {
+    default: "p-6",
+    sm: "p-4",
+    lg: "p-8",
+    none: "",
+  }
+
+  const interactiveStyles = interactive ? "hover:bg-white/15 hover:shadow-2xl hover:border-white/30" : ""
+
+  const glassStyles: React.CSSProperties = {
+    ...(blur !== undefined && { backdropFilter: `blur(${blur}px)`, WebkitBackdropFilter: `blur(${blur}px)` }),
+    ...(opacity !== undefined && { backgroundColor: `rgba(255, 255, 255, ${opacity})` }),
+    ...(borderOpacity !== undefined && { borderColor: `rgba(255, 255, 255, ${borderOpacity})` }),
+    ...(borderRadius !== undefined && { borderRadius: `${borderRadius}px` }),
+    ...style,
+  }
+
   return (
     <div
-      className={cn(
-        "bg-white/70 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/20",
-        className
-      )}
+      className={`${baseStyles} ${variantStyles[variant]} ${interactiveStyles} ${className}`}
+      style={glassStyles}
       {...props}
     >
       {children}
     </div>
-  );
+  )
 }

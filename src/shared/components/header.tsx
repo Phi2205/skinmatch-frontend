@@ -5,7 +5,7 @@ import { ShoppingBag, Menu, X, User } from 'lucide-react';
 import { useState } from 'react';
 import { useCart } from '@/modules/cart/hooks/useCart';
 
-import { GlassContainer } from './ui/glass-container';
+import { GlassCard } from './ui/glass-container';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -13,7 +13,7 @@ export function Header() {
 
   return (
     <div className="fixed top-4 left-0 right-0 z-50 px-4 flex justify-center">
-      <GlassContainer className="w-full max-w-6xl rounded-full px-6 py-2">
+      <GlassCard className="w-full max-w-6xl rounded-full px-6 py-2" variant="none">
         <div className="flex justify-between items-center h-12">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
@@ -81,7 +81,7 @@ export function Header() {
             </Link>
           </nav>
         )}
-      </GlassContainer>
+      </GlassCard>
     </div>
   );
 }
