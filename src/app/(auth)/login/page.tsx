@@ -32,9 +32,17 @@ export default function LoginPage() {
 
       // Store user in localStorage
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      // Set cookies for middleware
+      document.cookie = `user_id=${response.data.user.id}; path=/; max-age=86400; SameSite=Lax`;
+      document.cookie = `user_role=${response.data.user.role}; path=/; max-age=86400; SameSite=Lax`;
 
-      // Redirect to dashboard
-      router.push('/');
+      // Redirect based on role
+      if (response.data.user.role === 'ADMIN') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/');
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'An error occurred');
       setLoading(false);
@@ -43,7 +51,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header />
+      {/* <Header /> */}
 
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">

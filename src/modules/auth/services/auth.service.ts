@@ -54,6 +54,11 @@ export const logout = async () => {
   }
 }
 
+export const verifyOtp = async (data: { email: string, otp: string }): Promise<ApiResponse<any>> => {
+  const response = await axiosPublic.post<ApiResponse<any>>('/auth/verify-otp', data);
+  return response.data;
+}
+
 export const refresh = async () => {
   try {
     const response = await axiosPublic.post<ApiResponse<{ user: User }>>('/auth/refresh');

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/modules/cart/hooks/useCart'
+import QueryProvider from '@/shared/providers/query-provider'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -38,10 +39,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background" suppressHydrationWarning>
       <body className="font-sans antialiased bg-background">
-        <CartProvider>
-          {children}
-          {process.env.NODE_ENV === 'production' && <Analytics />}
-        </CartProvider>
+        <QueryProvider>
+          <CartProvider>
+            {children}
+            {process.env.NODE_ENV === 'production' && <Analytics />}
+          </CartProvider>
+        </QueryProvider>
       </body>
     </html>
   )

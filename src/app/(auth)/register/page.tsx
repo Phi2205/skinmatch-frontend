@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Mail, Lock, Check, X } from 'lucide-react';
+import { register } from '@/modules/auth/services/auth.service';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -43,34 +44,30 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, confirmPassword, name }),
-      });
+      const response = await register({ email, password, name });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'Registration failed');
+      if (!response.success) {
+        setError(response.message || 'Registration failed');
         setLoading(false);
         return;
       }
 
-      // Store user in localStorage
-      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Set cookies for middleware
+      // document.cookie = `user_id=${response.data.user.id}; path=/; max-age=86400; SameSite=Lax`;
+      // document.cookie = `user_role=${response.data.user.role}; path=/; max-age=86400; SameSite=Lax`;
 
-      // Redirect to skin profile setup
-      router.push('/onboarding/skin-profile');
+      // Redirect to verification screen
+      router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      setError(err.response?.data?.message || err.message || 'An error occurred');
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header />
+      {/* <Header /> */}
 
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
