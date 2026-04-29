@@ -6,26 +6,27 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as zod from 'zod';
 import { X, Loader2, Plus, Trash2, FileJson, ListPlus } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createMultipleCategories } from '../services/category.service';
+import { createMultipleSkinTypes } from '../services/skin-type.service';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const categorySchema = zod.object({
-  categories: zod.array(
+const skinTypeSchema = zod.object({
+  skinTypes: zod.array(
     zod.object({
       name: zod.string().min(2, 'Name must be at least 2 characters'),
+      description: zod.string().optional(),
     })
-  ).min(1, 'Please add at least one category'),
+  ).min(1, 'Please add at least one skin type'),
 });
 
-type CategoryFormData = zod.infer<typeof categorySchema>;
+type SkinTypeFormData = zod.infer<typeof skinTypeSchema>;
 
-interface CreateCategoryModalProps {
+interface CreateSkinTypeModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProps) {
+export function CreateSkinTypeModal({ isOpen, onClose }: CreateSkinTypeModalProps) {
   const queryClient = useQueryClient();
   const [inputMode, setInputMode] = useState<'form' | 'json'>('form');
   const [jsonInput, setJsonInput] = useState('');
@@ -36,28 +37,28 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
     handleSubmit,
     reset,
     formState: { errors }
-  } = useForm<CategoryFormData>({
-    resolver: zodResolver(categorySchema),
+  } = useForm<SkinTypeFormData>({
+    resolver: zodResolver(skinTypeSchema),
     defaultValues: {
-      categories: [{ name: '' }]
+      skinTypes: [{ name: '', description: '' }]
     }
   });
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'categories'
+    name: 'skinTypes'
   });
 
   const mutation = useMutation({
-    mutationFn: createMultipleCategories,
+    mutationFn: createMultipleSkinTypes,
     onSuccess: (response) => {
       if (response.success) {
-        toast.success('Categories created successfully');
-        queryClient.invalidateQueries({ queryKey: ['categories'] });
+        toast.success('Skin types created successfully');
+        queryClient.invalidateQueries({ queryKey: ['skin-types'] });
         reset();
         onClose();
       } else {
-        toast.error(response.message || 'Failed to create categories');
+        toast.error(response.message || 'Failed to create skin types');
       }
     },
     onError: (error: any) => {
@@ -65,7 +66,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
     },
   });
 
-  const handleFormSubmit = (data: CategoryFormData) => {
+  const handleFormSubmit = (data: SkinTypeFormData) => {
     mutation.mutate(data);
   };
 
@@ -77,18 +78,18 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
       if (Array.isArray(parsed)) {
         payload = parsed.map(item => {
           if (typeof item === 'string') return { name: item };
-          if (item && item.name) return { name: item.name };
+          if (item && item.name) return { name: item.name, description: item.description };
           throw new Error('Invalid format. Array items must be strings or objects with a "name" property.');
         });
-      } else if (parsed && Array.isArray(parsed.categories)) {
-        payload = parsed.categories;
+      } else if (parsed && Array.isArray(parsed.skinTypes)) {
+        payload = parsed.skinTypes;
       } else {
-        throw new Error('JSON must be an array or an object containing a "categories" array.');
+        throw new Error('JSON must be an array or an object containing a "skinTypes" array.');
       }
       
       if (payload.length === 0) throw new Error('No items found');
       
-      mutation.mutate({ categories: payload });
+      mutation.mutate({ skinTypes: payload });
     } catch (err: any) {
       toast.error('JSON Error: ' + err.message);
     }
@@ -126,10 +127,10 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
           >
             <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
-              <h2 className="text-xl font-bold text-gray-900">Create Categories</h2>
+              <h2 className="text-xl font-bold text-gray-900">Create Skin Types</h2>
               <button 
                 onClick={handleClose}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition cursor-pointer"
@@ -162,7 +163,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
             </div>
 
             <div className="overflow-y-auto p-6 flex-1">
-              <form id="category-form" onSubmit={submitHandler} className="space-y-4">
+              <form id="skin-type-form" onSubmit={submitHandler} className="space-y-4">
                 {inputMode === 'json' ? (
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-gray-700">Paste JSON Data</label>
@@ -170,35 +171,44 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
                       value={jsonInput}
                       onChange={(e) => setJsonInput(e.target.value)}
                       placeholder={`[
-  { "name": "Serums" },
-  { "name": "Moisturizers" }
+  { "name": "Oily", "description": "Produces excess sebum" },
+  { "name": "Dry" }
 ]
 // or simply:
-["Serums", "Moisturizers"]`}
+["Oily", "Dry"]`}
                       rows={10}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 focus:border-[#7a9e8e] transition font-mono text-sm resize-none"
                     />
                     <p className="text-xs text-gray-500">
-                      Supports arrays of strings <code>["A", "B"]</code> or objects <code>[{`{"name": "A"}`}]</code>.
+                      Supports arrays of strings <code>["A", "B"]</code> or objects <code>[{`{"name": "A", "description": "..."}`}]</code>.
                     </p>
                   </div>
                 ) : (
                   <>
                     <div className="space-y-4">
                   {fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2 items-start">
+                    <div key={field.id} className="flex gap-4 items-start">
                       <div className="flex-1 space-y-1.5">
-                        <label className="text-sm font-semibold text-gray-700">Category Name {index + 1}</label>
+                        <label className="text-sm font-semibold text-gray-700">Skin Type {index + 1}</label>
                         <input
-                          {...register(`categories.${index}.name` as const)}
-                          placeholder="e.g. Cleansers, Toners"
+                          {...register(`skinTypes.${index}.name` as const)}
+                          placeholder="e.g. Oily"
                           className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 transition ${
-                            errors.categories?.[index]?.name ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#7a9e8e]'
+                            errors.skinTypes?.[index]?.name ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#7a9e8e]'
                           }`}
                         />
-                        {errors.categories?.[index]?.name && (
-                          <p className="text-xs text-red-500 mt-1">{errors.categories[index]?.name?.message}</p>
+                        {errors.skinTypes?.[index]?.name && (
+                          <p className="text-xs text-red-500 mt-1">{errors.skinTypes[index]?.name?.message}</p>
                         )}
+                      </div>
+
+                      <div className="flex-[2] space-y-1.5">
+                        <label className="text-sm font-semibold text-gray-700">Description (Optional)</label>
+                        <input
+                          {...register(`skinTypes.${index}.description` as const)}
+                          placeholder="e.g. Tends to produce excess sebum..."
+                          className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 transition border-gray-200 focus:border-[#7a9e8e]`}
+                        />
                       </div>
                       
                       {fields.length > 1 && (
@@ -216,14 +226,14 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
 
                 <button
                   type="button"
-                  onClick={() => append({ name: '' })}
+                  onClick={() => append({ name: '', description: '' })}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-[#7a9e8e] text-[#7a9e8e] font-semibold rounded-xl hover:bg-[#7a9e8e]/5 transition cursor-pointer"
                 >
                   <Plus size={18} />
-                  Add Another Category
+                  Add Another Skin Type
                 </button>
-                {errors.categories && !Array.isArray(errors.categories) && (
-                  <p className="text-xs text-red-500 mt-1">{errors.categories.message}</p>
+                {errors.skinTypes && !Array.isArray(errors.skinTypes) && (
+                  <p className="text-xs text-red-500 mt-1">{errors.skinTypes.message}</p>
                 )}
                   </>
                 )}
@@ -240,7 +250,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
               </button>
               <button
                 type="submit"
-                form="category-form"
+                form="skin-type-form"
                 disabled={mutation.isPending}
                 className="flex-1 px-4 py-2.5 bg-[#7a9e8e] text-white font-semibold rounded-xl hover:bg-[#5a7a6b] transition flex items-center justify-center gap-2 shadow-lg shadow-[#7a9e8e]/20 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
               >
@@ -250,7 +260,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
                     Creating...
                   </>
                 ) : (
-                  `Create ${fields.length > 1 ? 'Categories' : 'Category'}`
+                  `Create ${fields.length > 1 ? 'Skin Types' : 'Skin Type'}`
                 )}
               </button>
             </div>

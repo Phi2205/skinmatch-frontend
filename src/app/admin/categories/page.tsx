@@ -22,13 +22,13 @@ import { Toaster, toast } from 'sonner';
 import { Switch } from '@/shared/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 
-const mockCategories = [
-  { id: 1, name: 'Serum', slug: 'serum' },
-  { id: 2, name: 'Cleanser', slug: 'cleanser' },
-  { id: 3, name: 'Moisturizer', slug: 'moisturizer' },
-  { id: 4, name: 'Sunscreen', slug: 'sunscreen' },
-  { id: 5, name: 'Oils', slug: 'oils' },
-];
+const removeAccents = (str: string) => {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D');
+};
 
 export default function AdminCategories() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,8 +60,11 @@ export default function AdminCategories() {
   const categories = categoriesResponse?.data || [];
   
   const filteredCategories = categories.filter(category => {
-    const matchesSearch = category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         category.slug.toLowerCase().includes(searchTerm.toLowerCase());
+    const nameStr = removeAccents(category?.name || '').toLowerCase();
+    const slugStr = removeAccents(category?.slug || '').toLowerCase();
+    const searchNormalized = removeAccents(searchTerm).toLowerCase();
+    
+    const matchesSearch = nameStr.includes(searchNormalized) || slugStr.includes(searchNormalized);
     
     const matchesStatus = statusFilter === 'all' || 
                          (statusFilter === 'active' && category.is_active) ||

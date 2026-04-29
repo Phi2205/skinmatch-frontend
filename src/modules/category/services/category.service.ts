@@ -22,6 +22,16 @@ export const createCategory = async (data: { name: string }): Promise<ApiRespons
     }
 }
 
+export const createMultipleCategories = async (data: { categories: { name: string }[] }): Promise<ApiResponse<Category[]>> => {
+    try {
+        const response = await axiosInstance.post<ApiResponse<Category[]>>('/categories/bulk', data);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating multiple categories:', error);
+        throw error;
+    }
+}
+
 export const updateCategory = async (id: number, data: { name: string }): Promise<ApiResponse<Category>> => {
     try {
         const response = await axiosInstance.patch<ApiResponse<Category>>(`/categories/${id}`, data);

@@ -6,7 +6,11 @@ import {
   Users, 
   Settings, 
   LogOut, 
-  Tag
+  Tag,
+  Droplets,
+  AlertCircle,
+  Beaker,
+  Award
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -18,6 +22,10 @@ export function AdminSidebar() {
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Manage Products', href: '/admin/products', icon: ShoppingBag },
     { name: 'Manage Categories', href: '/admin/categories', icon: Tag },
+    { name: 'Manage Skin Types', href: '/admin/skin-types', icon: Droplets },
+    { name: 'Manage Concerns', href: '/admin/concerns', icon: AlertCircle },
+    { name: 'Manage Ingredients', href: '/admin/ingredients', icon: Beaker },
+    { name: 'Manage Badges', href: '/admin/badges', icon: Award },
     { name: 'Manage Users', href: '#', icon: Users },
     { name: 'Settings', href: '#', icon: Settings },
   ];

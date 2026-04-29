@@ -6,26 +6,26 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as zod from 'zod';
 import { X, Loader2, Plus, Trash2, FileJson, ListPlus } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createMultipleCategories } from '../services/category.service';
+import { createMultipleConcerns } from '../services/concern.service';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const categorySchema = zod.object({
-  categories: zod.array(
+const concernsSchema = zod.object({
+  concerns: zod.array(
     zod.object({
       name: zod.string().min(2, 'Name must be at least 2 characters'),
     })
-  ).min(1, 'Please add at least one category'),
+  ).min(1, 'Please add at least one concern'),
 });
 
-type CategoryFormData = zod.infer<typeof categorySchema>;
+type ConcernsFormData = zod.infer<typeof concernsSchema>;
 
-interface CreateCategoryModalProps {
+interface CreateConcernModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProps) {
+export function CreateConcernModal({ isOpen, onClose }: CreateConcernModalProps) {
   const queryClient = useQueryClient();
   const [inputMode, setInputMode] = useState<'form' | 'json'>('form');
   const [jsonInput, setJsonInput] = useState('');
@@ -36,28 +36,28 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
     handleSubmit,
     reset,
     formState: { errors }
-  } = useForm<CategoryFormData>({
-    resolver: zodResolver(categorySchema),
+  } = useForm<ConcernsFormData>({
+    resolver: zodResolver(concernsSchema),
     defaultValues: {
-      categories: [{ name: '' }]
+      concerns: [{ name: '' }]
     }
   });
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'categories'
+    name: 'concerns'
   });
 
   const mutation = useMutation({
-    mutationFn: createMultipleCategories,
+    mutationFn: createMultipleConcerns,
     onSuccess: (response) => {
       if (response.success) {
-        toast.success('Categories created successfully');
-        queryClient.invalidateQueries({ queryKey: ['categories'] });
+        toast.success('Concerns created successfully');
+        queryClient.invalidateQueries({ queryKey: ['concerns'] });
         reset();
         onClose();
       } else {
-        toast.error(response.message || 'Failed to create categories');
+        toast.error(response.message || 'Failed to create concerns');
       }
     },
     onError: (error: any) => {
@@ -65,7 +65,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
     },
   });
 
-  const handleFormSubmit = (data: CategoryFormData) => {
+  const handleFormSubmit = (data: ConcernsFormData) => {
     mutation.mutate(data);
   };
 
@@ -80,15 +80,15 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
           if (item && item.name) return { name: item.name };
           throw new Error('Invalid format. Array items must be strings or objects with a "name" property.');
         });
-      } else if (parsed && Array.isArray(parsed.categories)) {
-        payload = parsed.categories;
+      } else if (parsed && Array.isArray(parsed.concerns)) {
+        payload = parsed.concerns;
       } else {
-        throw new Error('JSON must be an array or an object containing a "categories" array.');
+        throw new Error('JSON must be an array or an object containing a "concerns" array.');
       }
       
       if (payload.length === 0) throw new Error('No items found');
       
-      mutation.mutate({ categories: payload });
+      mutation.mutate({ concerns: payload });
     } catch (err: any) {
       toast.error('JSON Error: ' + err.message);
     }
@@ -129,10 +129,10 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
             className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
           >
             <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
-              <h2 className="text-xl font-bold text-gray-900">Create Categories</h2>
+              <h2 className="text-xl font-bold text-gray-900">Create Skin Concerns</h2>
               <button 
                 onClick={handleClose}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition cursor-pointer"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition"
               >
                 <X size={20} />
               </button>
@@ -142,7 +142,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
               <div className="flex bg-gray-100 p-1 rounded-xl">
                 <button
                   onClick={() => setInputMode('form')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold rounded-lg transition-all ${
                     inputMode === 'form' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -151,7 +151,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
                 </button>
                 <button
                   onClick={() => setInputMode('json')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold rounded-lg transition-all ${
                     inputMode === 'json' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -162,7 +162,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
             </div>
 
             <div className="overflow-y-auto p-6 flex-1">
-              <form id="category-form" onSubmit={submitHandler} className="space-y-4">
+              <form id="concern-form" onSubmit={submitHandler} className="space-y-4">
                 {inputMode === 'json' ? (
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-gray-700">Paste JSON Data</label>
@@ -170,11 +170,11 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
                       value={jsonInput}
                       onChange={(e) => setJsonInput(e.target.value)}
                       placeholder={`[
-  { "name": "Serums" },
-  { "name": "Moisturizers" }
+  { "name": "Mụn" },
+  { "name": "Nám" }
 ]
 // or simply:
-["Serums", "Moisturizers"]`}
+["Mụn", "Nám"]`}
                       rows={10}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 focus:border-[#7a9e8e] transition font-mono text-sm resize-none"
                     />
@@ -188,16 +188,16 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
                   {fields.map((field, index) => (
                     <div key={field.id} className="flex gap-2 items-start">
                       <div className="flex-1 space-y-1.5">
-                        <label className="text-sm font-semibold text-gray-700">Category Name {index + 1}</label>
+                        <label className="text-sm font-semibold text-gray-700">Concern Name {index + 1}</label>
                         <input
-                          {...register(`categories.${index}.name` as const)}
-                          placeholder="e.g. Cleansers, Toners"
+                          {...register(`concerns.${index}.name` as const)}
+                          placeholder="e.g. Mụn, Nám, Tàn nhang"
                           className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 transition ${
-                            errors.categories?.[index]?.name ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#7a9e8e]'
+                            errors.concerns?.[index]?.name ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#7a9e8e]'
                           }`}
                         />
-                        {errors.categories?.[index]?.name && (
-                          <p className="text-xs text-red-500 mt-1">{errors.categories[index]?.name?.message}</p>
+                        {errors.concerns?.[index]?.name && (
+                          <p className="text-xs text-red-500 mt-1">{errors.concerns[index]?.name?.message}</p>
                         )}
                       </div>
                       
@@ -205,7 +205,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
                         <button
                           type="button"
                           onClick={() => remove(index)}
-                          className="mt-[26px] p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                          className="mt-[26px] p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition"
                         >
                           <Trash2 size={20} />
                         </button>
@@ -220,10 +220,10 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-[#7a9e8e] text-[#7a9e8e] font-semibold rounded-xl hover:bg-[#7a9e8e]/5 transition cursor-pointer"
                 >
                   <Plus size={18} />
-                  Add Another Category
+                  Add Another Concern
                 </button>
-                {errors.categories && !Array.isArray(errors.categories) && (
-                  <p className="text-xs text-red-500 mt-1">{errors.categories.message}</p>
+                {errors.concerns && !Array.isArray(errors.concerns) && (
+                  <p className="text-xs text-red-500 mt-1">{errors.concerns.message}</p>
                 )}
                   </>
                 )}
@@ -240,7 +240,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
               </button>
               <button
                 type="submit"
-                form="category-form"
+                form="concern-form"
                 disabled={mutation.isPending}
                 className="flex-1 px-4 py-2.5 bg-[#7a9e8e] text-white font-semibold rounded-xl hover:bg-[#5a7a6b] transition flex items-center justify-center gap-2 shadow-lg shadow-[#7a9e8e]/20 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
               >
@@ -250,7 +250,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
                     Creating...
                   </>
                 ) : (
-                  `Create ${fields.length > 1 ? 'Categories' : 'Category'}`
+                  `Create ${fields.length > 1 ? 'Concerns' : 'Concern'}`
                 )}
               </button>
             </div>
