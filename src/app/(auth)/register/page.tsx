@@ -6,10 +6,11 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Mail, Lock, Check, X } from 'lucide-react';
-import { register } from '@/modules/auth/services/auth.service';
+import { useAuth } from '@/contexts/authContext';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,21 +45,8 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await register({ email, password, name });
-
-      if (!response.success) {
-        setError(response.message || 'Registration failed');
-        setLoading(false);
-        return;
-      }
-
-      
-      // Set cookies for middleware
-      // document.cookie = `user_id=${response.data.user.id}; path=/; max-age=86400; SameSite=Lax`;
-      // document.cookie = `user_role=${response.data.user.role}; path=/; max-age=86400; SameSite=Lax`;
-
-      // Redirect to verification screen
-      router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
+      await register(email, password, name);
+      // Redirection is handled within authContext
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'An error occurred');
       setLoading(false);

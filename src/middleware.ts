@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 
+
 // Các route yêu cầu đã đăng nhập mới được truy cập
 const protectedRoutes = ['/dashboard', '/checkout', '/account', '/order-confirmation'];
 
@@ -17,6 +18,8 @@ export function middleware(request: NextRequest) {
   // 1. Kiểm tra nếu truy cập route admin mà không phải admin
   const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
   if (isAdminRoute) {
+    console.log("user_id = " + userId);
+    console.log("user_role = " + userRole);
     if (!userId || userRole !== 'ADMIN') {
       return NextResponse.redirect(new URL('/', request.url));
     }

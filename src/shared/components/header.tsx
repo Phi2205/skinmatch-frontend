@@ -2,7 +2,8 @@
  
 import Link from 'next/link';
 import { ShoppingBag, Menu, X, User as UserIcon, LogOut, LayoutDashboard } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAuth } from '@/contexts/authContext';
 import { useCart } from '@/modules/cart/hooks/useCart';
 
 import { GlassCard } from './ui/glass-container';
@@ -10,22 +11,16 @@ import { DarkGlassCard } from './ui/dark-glass-card';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const { user, logout } = useAuth();
   const { itemCount } = useCart();
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setMobileMenuOpen(false);
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    document.cookie = "user_role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    setUser(null);
-    window.location.href = '/';
   };
 
   return (

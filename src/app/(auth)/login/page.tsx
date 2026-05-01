@@ -5,13 +5,15 @@ import { Footer } from '@/shared/components/footer';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock } from 'lucide-react';
-import { login } from '@/modules/auth/services/auth.service';
+import { useAuth } from '@/contexts/authContext';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,28 +23,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await login({ email, password });
-      
-      if (!response.success) {
-        setError(response.message || 'Login failed');
-        setLoading(false);
-        return;
-      }
-      console.log("response", response.data.user)
-
-      // Store user in localStorage
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      
-      // Set cookies for middleware
-      document.cookie = `user_id=${response.data.user.id}; path=/; max-age=86400; SameSite=Lax`;
-      document.cookie = `user_role=${response.data.user.role}; path=/; max-age=86400; SameSite=Lax`;
-
-      // Redirect based on role
-      if (response.data.user.role === 'ADMIN') {
-        router.push('/admin/dashboard');
-      } else {
-        router.push('/');
-      }
+      await login(email, password);
+      // Success redirection is handled within authContext
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'An error occurred');
       setLoading(false);
@@ -104,13 +86,20 @@ export default function LoginPage() {
                   <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                   <input
                     id="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-2 border border-[#e8e5dd] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]"
+                    className="w-full pl-10 pr-12 py-2 border border-[#e8e5dd] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
                 </div>
               </div>
 

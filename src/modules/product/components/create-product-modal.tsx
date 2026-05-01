@@ -82,12 +82,32 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
   const watchSkinTypeIds = watch('skin_type_ids');
   const watchImageUrl = watch('image_url');
 
-  // Queries for data
-  const { data: categoriesResponse } = useQuery({ queryKey: ['categories'], queryFn: getAllCategories });
-  const { data: badgesResponse } = useQuery({ queryKey: ['badges'], queryFn: getAllBadges });
-  const { data: concernsResponse } = useQuery({ queryKey: ['concerns'], queryFn: getAllConcerns });
-  const { data: ingredientsResponse } = useQuery({ queryKey: ['ingredients'], queryFn: getAllIngredients });
-  const { data: skinTypesResponse } = useQuery({ queryKey: ['skin-types'], queryFn: getAllSkinTypes });
+  // Queries for data - Only fetch when modal is open
+  const { data: categoriesResponse } = useQuery({ 
+    queryKey: ['categories'], 
+    queryFn: getAllCategories,
+    enabled: isOpen 
+  });
+  const { data: badgesResponse } = useQuery({ 
+    queryKey: ['badges'], 
+    queryFn: getAllBadges,
+    enabled: isOpen 
+  });
+  const { data: concernsResponse } = useQuery({ 
+    queryKey: ['concerns'], 
+    queryFn: getAllConcerns,
+    enabled: isOpen 
+  });
+  const { data: ingredientsResponse } = useQuery({ 
+    queryKey: ['ingredients'], 
+    queryFn: getAllIngredients,
+    enabled: isOpen 
+  });
+  const { data: skinTypesResponse } = useQuery({ 
+    queryKey: ['skin-types'], 
+    queryFn: getAllSkinTypes,
+    enabled: isOpen 
+  });
 
   const categories = categoriesResponse?.data || [];
   const badges = badgesResponse?.data || [];

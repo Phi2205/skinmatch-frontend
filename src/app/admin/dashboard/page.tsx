@@ -20,7 +20,7 @@ export default function AdminDashboard() {
     { label: 'Total Sales', value: '$12,450', icon: ShoppingBag, color: 'bg-green-500' },
     { label: 'Active Orders', value: '45', icon: LayoutDashboard, color: 'bg-purple-500' },
   ];
-
+  console.log("load dashboard")
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       
