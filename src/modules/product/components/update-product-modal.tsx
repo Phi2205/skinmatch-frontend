@@ -16,7 +16,7 @@ import {
   FileImage
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { updateProduct } from '../services/product.service';
+import { updateProduct, getProductById } from '../services/product.service';
 import { Product } from '../types/product.type';
 import { getAllCategories } from '@/modules/category/services/category.service';
 import { getAllBadges } from '@/modules/badges/services/badge.service';
@@ -25,6 +25,10 @@ import { getAllIngredients } from '@/modules/ingredients/services/ingredient.ser
 import { getAllSkinTypes } from '@/modules/skin-types/services/skin-type.service';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import 'react-quill-new/dist/quill.snow.css';
+
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 const productSchema = zod.object({
   name: zod.string().min(2, 'Name must be at least 2 characters'),
@@ -32,6 +36,8 @@ const productSchema = zod.object({
   category_id: zod.preprocess((val) => val === '' ? undefined : Number(val), zod.number().optional()),
   summary: zod.string().optional().nullable(),
   description: zod.string().optional().nullable(),
+  ingredient_full_text: zod.string().optional().nullable(),
+  usage_instructions: zod.string().optional().nullable(),
   image_url: zod.string().url('Invalid image URL').or(zod.literal('')).optional().nullable(),
   is_featured: zod.boolean().default(false),
   is_active: zod.boolean().default(true),
@@ -68,27 +74,37 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
     resolver: zodResolver(productSchema),
   });
 
+  const { data: productDetailResponse, isLoading: isFetchingDetail } = useQuery({
+    queryKey: ['product-detail', product?.id],
+    queryFn: () => getProductById(product!.id),
+    enabled: !!product?.id && isOpen,
+  });
+
+  const productDetail = productDetailResponse?.data;
+
   useEffect(() => {
-    if (product && isOpen) {
+    if (productDetail && isOpen) {
       reset({
-        name: product.name,
-        price: product.price,
-        category_id: product.category_id || undefined,
-        summary: product.summary,
-        description: product.description,
-        image_url: product.image_url,
-        is_featured: product.is_featured,
-        is_active: product.is_active,
-        badge_ids: product.product_badges?.map(pb => pb.badges.id) || [],
-        concern_ids: product.product_concerns?.map(pc => pc.concerns.id) || [],
-        skin_type_ids: product.product_skin_types?.map(ps => ps.skin_types.id) || [],
-        ingredient_ids: product.product_ingredients?.map(pi => pi.ingredients.id) || [],
+        name: productDetail.name,
+        price: productDetail.price,
+        category_id: productDetail.category_id || undefined,
+        summary: productDetail.summary,
+        description: productDetail.description,
+        ingredient_full_text: productDetail.ingredient_full_text,
+        usage_instructions: productDetail.usage_instructions,
+        image_url: productDetail.image_url,
+        is_featured: productDetail.is_featured,
+        is_active: productDetail.is_active,
+        badge_ids: productDetail.badges?.map(b => b.id) || [],
+        concern_ids: productDetail.concerns?.map(c => c.id) || [],
+        skin_type_ids: productDetail.skin_types?.map(s => s.id) || [],
+        ingredient_ids: productDetail.ingredients?.map(i => i.id) || [],
       });
       setSelectedFile(null);
       setFilePreview(null);
-      setImageMode(product.image_url ? 'url' : 'file');
+      setImageMode(productDetail.image_url ? 'url' : 'file');
     }
-  }, [product, isOpen, reset]);
+  }, [productDetail, isOpen, reset]);
 
   const watchBadgeIds = watch('badge_ids') || [];
   const watchConcernIds = watch('concern_ids') || [];
@@ -173,6 +189,8 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
     if (data.category_id) formData.append('category_id', data.category_id.toString());
     if (data.summary) formData.append('summary', data.summary);
     if (data.description) formData.append('description', data.description);
+    if (data.ingredient_full_text) formData.append('ingredient_full_text', data.ingredient_full_text);
+    if (data.usage_instructions) formData.append('usage_instructions', data.usage_instructions);
     formData.append('is_featured', data.is_featured.toString());
     formData.append('is_active', data.is_active.toString());
 
@@ -284,6 +302,7 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
                 ].map((tab) => (
                   <button
                     key={tab.id}
+                    type="button"
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`pb-3 text-sm font-bold transition-all relative cursor-pointer ${
                       activeTab === tab.id ? 'text-[#7a9e8e]' : 'text-gray-400 hover:text-gray-600'
@@ -299,8 +318,14 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
             </div>
 
             {/* Form Content */}
-            <div className="overflow-y-auto flex-1 bg-gray-50/30">
-              <form id="update-product-form" onSubmit={handleSubmit(onSubmit)} className="p-8">
+            <div className="overflow-y-auto flex-1 bg-gray-50/30 min-h-[400px]">
+              {isFetchingDetail ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                  <div className="w-10 h-10 border-4 border-[#7a9e8e] border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-sm font-medium text-gray-500">Fetching product details...</p>
+                </div>
+              ) : (
+                <form id="update-product-form" onSubmit={handleSubmit(onSubmit)} className="p-8">
                 <AnimatePresence mode="wait">
                   {activeTab === 'basic' && (
                     <motion.div
@@ -352,7 +377,38 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
 
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700">Full Description</label>
-                        <textarea {...register('description')} rows={4} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 focus:border-[#7a9e8e] transition resize-none" />
+                        <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:border-[#7a9e8e] transition">
+                          <ReactQuill 
+                            theme="snow"
+                            value={watch('description') || ''}
+                            onChange={(content) => setValue('description', content)}
+                            className="quill-editor"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Ingredients (Full Text)</label>
+                        <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:border-[#7a9e8e] transition">
+                          <ReactQuill 
+                            theme="snow"
+                            value={watch('ingredient_full_text') || ''}
+                            onChange={(content) => setValue('ingredient_full_text', content)}
+                            className="quill-editor"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Usage Instructions</label>
+                        <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:border-[#7a9e8e] transition">
+                          <ReactQuill 
+                            theme="snow"
+                            value={watch('usage_instructions') || ''}
+                            onChange={(content) => setValue('usage_instructions', content)}
+                            className="quill-editor"
+                          />
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -430,7 +486,7 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
                                     <div className="flex-1 min-w-0">
                                       <p className="text-xs font-bold text-gray-900 truncate">{selectedFile.name}</p>
                                     </div>
-                                    <button onClick={handleRemoveFile} className="p-2 text-gray-400 hover:text-red-500 rounded-full transition cursor-pointer"><Trash2 size={16} /></button>
+                                    <button type="button" onClick={handleRemoveFile} className="p-2 text-gray-400 hover:text-red-500 rounded-full transition cursor-pointer"><Trash2 size={16} /></button>
                                   </div>
                                 )}
                               </div>
@@ -457,7 +513,8 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </form>
+                </form>
+              )}
             </div>
 
             {/* Footer */}
@@ -468,9 +525,22 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
               </div>
               <div className="flex gap-3">
                 {activeTab !== 'images' ? (
-                  <button type="button" onClick={() => setActiveTab(activeTab === 'basic' ? 'relations' : 'images')} className="px-8 py-3 bg-[#7a9e8e] text-white font-bold rounded-2xl hover:bg-[#5a7a6b] transition cursor-pointer">Next Step</button>
+                  <button 
+                    key="next-btn"
+                    type="button" 
+                    onClick={() => setActiveTab(activeTab === 'basic' ? 'relations' : 'images')} 
+                    className="px-8 py-3 bg-[#7a9e8e] text-white font-bold rounded-2xl hover:bg-[#5a7a6b] transition cursor-pointer"
+                  >
+                    Next Step
+                  </button>
                 ) : (
-                  <button type="submit" form="update-product-form" disabled={mutation.isPending} className="px-10 py-3 bg-[#7a9e8e] text-white font-bold rounded-2xl hover:bg-[#5a7a6b] transition flex items-center justify-center gap-2 shadow-xl shadow-[#7a9e8e]/30 disabled:opacity-70 cursor-pointer">
+                  <button 
+                    key="save-btn"
+                    type="submit" 
+                    form="update-product-form" 
+                    disabled={mutation.isPending} 
+                    className="px-10 py-3 bg-[#7a9e8e] text-white font-bold rounded-2xl hover:bg-[#5a7a6b] transition flex items-center justify-center gap-2 shadow-xl shadow-[#7a9e8e]/30 disabled:opacity-70 cursor-pointer"
+                  >
                     {mutation.isPending ? <><Loader2 size={20} className="animate-spin" />Saving...</> : 'Save Changes'}
                   </button>
                 )}

@@ -4,6 +4,8 @@ export interface Product {
   price: number;
   category_id: number | null;
   description: string | null;
+  ingredient_full_text: string | null;
+  usage_instructions: string | null;
   image_url: string | null;
   is_featured: boolean;
   is_active: boolean;
@@ -13,6 +15,7 @@ export interface Product {
     id: number;
     name: string;
     slug: string;
+    is_active: boolean;
   } | null;
   product_images: {
     id: number;
@@ -20,34 +23,34 @@ export interface Product {
     alt_text: string | null;
     is_main: boolean;
   }[];
-  product_badges: {
-    badges: {
-      id: number;
-      name: string;
-      slug: string;
-      icon_url: string | null;
-    };
+  badges: {
+    id: number;
+    name: string;
+    slug: string;
+    icon_url: string | null;
   }[];
-  product_concerns: {
-    concerns: {
-      id: number;
-      name: string;
-      slug: string;
-    };
+  concerns: {
+    id: number;
+    name: string;
+    slug: string;
   }[];
-  product_skin_types: {
-    skin_types: {
-      id: number;
-      name: string;
-      slug: string;
-    };
+  skin_types: {
+    id: number;
+    name: string;
+    slug: string;
+    description: string | null;
   }[];
-  product_ingredients: {
-    ingredients: {
-      id: number;
-      name: string;
-      slug: string;
-    };
+  ingredients: {
+    id: number;
+    name: string;
+    slug: string;
+  }[];
+  images: {
+    id: number;
+    image_url: string;
+    alt_text: string | null;
+    is_main: boolean;
+    position: number;
   }[];
 }
 

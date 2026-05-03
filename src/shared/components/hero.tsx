@@ -33,7 +33,7 @@ export function Hero() {
                   className="opacity-90 inline-block"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.06, duration: 0.3 }}
+                  transition={{ delay: i * 0.04, duration: 0.2 }}
                 >
                   {char}
                 </motion.span>
@@ -44,7 +44,7 @@ export function Hero() {
               className="relative w-[10vw] h-[10vw] max-w-[80px] max-h-[80px] md:max-w-[120px] md:max-h-[120px]"
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, duration: 0.5, type: "spring" }}
+              transition={{ delay: 0.25, duration: 0.35, type: "spring" }}
             >
               <svg viewBox="0 0 100 100" className="w-full h-full fill-[#5a7a6b] drop-shadow-xl animate-pulse-slow">
                 <path d="M50 10 C50 10 90 20 90 50 C90 80 50 90 50 90 C50 90 10 80 10 50 C10 20 50 10 50 10 Z" />
@@ -64,7 +64,7 @@ export function Hero() {
                   className="opacity-90 inline-block"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 + (i * 0.06), duration: 0.3 }}
+                  transition={{ delay: 0.5 + (i * 0.04), duration: 0.2 }}
                 >
                   {char}
                 </motion.span>
@@ -81,7 +81,7 @@ export function Hero() {
               className="relative w-full ms-50 aspect-[4/5] max-w-[370px] h-[460px] rounded-[40px] shadow-2xl border-[25px] border-white/20 group bg-[#eef4e8] overflow-visible"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 2.0, duration: 0.5 }}
+              transition={{ delay: 1.5, duration: 0.35 }}
             >
               <Image
                 src="/woman-hero.png"
@@ -96,7 +96,7 @@ export function Hero() {
             <motion.div
               initial={{ opacity: 0, scale: 0.8, y: 100 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ delay: 1.7, duration: 0.5, ease: "easeOut" }}
+              transition={{ delay: 1.1, duration: 0.35, ease: "easeOut" }}
               className="absolute bottom-4 -left-10 md:-left-20 z-30"
             >
               <GlassCard 
@@ -111,7 +111,7 @@ export function Hero() {
                   className="relative aspect-square w-full mb-4 -mt-10"
                   initial={{ opacity: 0, rotate: 0, scale: 0.4 }}
                   animate={{ opacity: 1, rotate: -12, scale: 1 }}
-                  transition={{ delay: 2.3, duration: 0.6, type: "spring", stiffness: 100 }}
+                  transition={{ delay: 1.8, duration: 0.4, type: "spring", stiffness: 100 }}
                 >
                     <Image
                       src="/image-product-demo.png"
@@ -130,8 +130,8 @@ export function Hero() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ 
-                            delay: 2.5 + (i * 0.06), 
-                            duration: 0.3,
+                            delay: 2.0 + (i * 0.04), 
+                            duration: 0.2,
                             ease: "easeOut"
                           }}
                           className="mr-1.5"

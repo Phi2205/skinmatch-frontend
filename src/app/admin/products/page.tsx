@@ -26,6 +26,7 @@ import { Toaster, toast } from 'sonner';
 import { Switch } from '@/shared/components/ui/switch';
 import { CreateProductModal } from '@/modules/product/components/create-product-modal';
 import { UpdateProductModal } from '@/modules/product/components/update-product-modal';
+import { ProductImagesModal } from '@/modules/product/components/product-images-modal';
 import { Trash2 } from 'lucide-react';
 
 // Debounce hook
@@ -55,6 +56,7 @@ export default function AdminProducts() {
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const queryClient = useQueryClient();
@@ -129,6 +131,11 @@ export default function AdminProducts() {
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
     setIsUpdateOpen(true);
+  };
+
+  const handleOpenGallery = (product: Product) => {
+    setSelectedProduct(product);
+    setIsGalleryOpen(true);
   };
 
   const handleDelete = (id: number) => {
@@ -323,7 +330,6 @@ export default function AdminProducts() {
                           Price {getSortIcon('price')}
                         </button>
                       </th>
-                      <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Badges</th>
                       <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-center">Status</th>
                       <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-right">Actions</th>
                     </tr>
@@ -331,7 +337,7 @@ export default function AdminProducts() {
                   <tbody className="divide-y divide-gray-100">
                     {isLoading ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-16 text-center text-gray-500">
+                        <td colSpan={5} className="px-6 py-16 text-center text-gray-500">
                           <div className="flex flex-col items-center gap-3">
                             <div className="w-8 h-8 border-4 border-[#7a9e8e] border-t-transparent rounded-full animate-spin"></div>
                             <p className="text-sm">Loading products...</p>
@@ -340,13 +346,13 @@ export default function AdminProducts() {
                       </tr>
                     ) : error ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-16 text-center text-red-500">
+                        <td colSpan={5} className="px-6 py-16 text-center text-red-500">
                           <p className="text-sm">Error loading products. Please try again.</p>
                         </td>
                       </tr>
                     ) : products.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-16 text-center text-gray-500">
+                        <td colSpan={5} className="px-6 py-16 text-center text-gray-500">
                           <div className="flex flex-col items-center gap-3">
                             <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
                               <ShoppingBag size={24} className="text-gray-400" />
@@ -399,23 +405,6 @@ export default function AdminProducts() {
                               {formatPrice(product.price)}
                             </td>
                             <td className="px-6 py-4">
-                              <div className="flex flex-wrap gap-1">
-                                {product.product_badges?.slice(0, 3).map((pb: any) => (
-                                  <span key={pb.badges.id} className="px-2 py-0.5 bg-[#7a9e8e]/10 text-[#7a9e8e] rounded-full text-xs font-medium">
-                                    {pb.badges.name}
-                                  </span>
-                                ))}
-                                {(product.product_badges?.length || 0) > 3 && (
-                                  <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">
-                                    +{product.product_badges.length - 3}
-                                  </span>
-                                )}
-                                {(!product.product_badges || product.product_badges.length === 0) && (
-                                  <span className="text-xs text-gray-400">—</span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
                               <div className="flex justify-center">
                                 <Switch 
                                   checked={product.is_active}
@@ -427,8 +416,16 @@ export default function AdminProducts() {
                             <td className="px-6 py-4 text-right">
                               <div className="flex justify-end gap-2">
                                 <button 
+                                  onClick={() => handleOpenGallery(product)}
+                                  className="p-2 text-gray-400 hover:text-[#7a9e8e] transition-colors bg-white shadow-sm border border-gray-100 rounded-lg cursor-pointer"
+                                  title="Manage Gallery"
+                                >
+                                  <ImageIcon size={16} />
+                                </button>
+                                <button 
                                   onClick={() => handleEdit(product)}
                                   className="p-2 text-gray-400 hover:text-[#7a9e8e] transition-colors bg-white shadow-sm border border-gray-100 rounded-lg cursor-pointer"
+                                  title="Edit Product"
                                 >
                                   <Edit2 size={16} />
                                 </button>
@@ -541,6 +538,12 @@ export default function AdminProducts() {
       <UpdateProductModal 
         isOpen={isUpdateOpen} 
         onClose={() => setIsUpdateOpen(false)} 
+        product={selectedProduct}
+      />
+
+      <ProductImagesModal
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
         product={selectedProduct}
       />
 

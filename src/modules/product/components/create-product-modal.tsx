@@ -24,6 +24,10 @@ import { getAllIngredients } from '@/modules/ingredients/services/ingredient.ser
 import { getAllSkinTypes } from '@/modules/skin-types/services/skin-type.service';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import 'react-quill-new/dist/quill.snow.css';
+
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 const productSchema = zod.object({
   name: zod.string().min(2, 'Name must be at least 2 characters'),
@@ -31,6 +35,8 @@ const productSchema = zod.object({
   category_id: zod.preprocess((val) => val === '' ? undefined : Number(val), zod.number().optional()),
   summary: zod.string().optional(),
   description: zod.string().optional(),
+  ingredient_full_text: zod.string().optional(),
+  usage_instructions: zod.string().optional(),
   image_url: zod.string().url('Invalid image URL').or(zod.literal('')).optional(),
   is_featured: zod.boolean().default(false),
   is_active: zod.boolean().default(true),
@@ -158,6 +164,8 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
     if (data.category_id) formData.append('category_id', data.category_id.toString());
     if (data.summary) formData.append('summary', data.summary);
     if (data.description) formData.append('description', data.description);
+    if (data.ingredient_full_text) formData.append('ingredient_full_text', data.ingredient_full_text);
+    if (data.usage_instructions) formData.append('usage_instructions', data.usage_instructions);
     formData.append('is_featured', data.is_featured.toString());
     formData.append('is_active', data.is_active.toString());
 
@@ -272,6 +280,7 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
                 ].map((tab) => (
                   <button
                     key={tab.id}
+                    type="button"
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`pb-3 text-sm font-bold transition-all relative cursor-pointer ${
                       activeTab === tab.id ? 'text-[#7a9e8e]' : 'text-gray-400 hover:text-gray-600'
@@ -351,11 +360,38 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
 
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700">Full Description</label>
-                        <textarea
-                          {...register('description')}
-                          rows={4}
-                          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 focus:border-[#7a9e8e] transition resize-none"
-                        />
+                        <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:border-[#7a9e8e] transition">
+                          <ReactQuill 
+                            theme="snow"
+                            value={watch('description') || ''}
+                            onChange={(content) => setValue('description', content)}
+                            className="quill-editor"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Ingredients (Full Text)</label>
+                        <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:border-[#7a9e8e] transition">
+                          <ReactQuill 
+                            theme="snow"
+                            value={watch('ingredient_full_text') || ''}
+                            onChange={(content) => setValue('ingredient_full_text', content)}
+                            className="quill-editor"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Usage Instructions</label>
+                        <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:border-[#7a9e8e] transition">
+                          <ReactQuill 
+                            theme="snow"
+                            value={watch('usage_instructions') || ''}
+                            onChange={(content) => setValue('usage_instructions', content)}
+                            className="quill-editor"
+                          />
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -463,7 +499,7 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
                                       <p className="text-xs font-bold text-gray-900 truncate">{selectedFile.name}</p>
                                       <p className="text-[10px] text-gray-400">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                                     </div>
-                                    <button onClick={handleRemoveFile} className="p-2 text-gray-400 hover:text-red-500 rounded-full transition cursor-pointer">
+                                    <button type="button" onClick={handleRemoveFile} className="p-2 text-gray-400 hover:text-red-500 rounded-full transition cursor-pointer">
                                       <Trash2 size={16} />
                                     </button>
                                   </div>
@@ -538,9 +574,22 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
               
               <div className="flex gap-3">
                 {activeTab !== 'images' ? (
-                  <button type="button" onClick={() => setActiveTab(activeTab === 'basic' ? 'relations' : 'images')} className="px-8 py-3 bg-[#7a9e8e] text-white font-bold rounded-2xl hover:bg-[#5a7a6b] transition shadow-lg shadow-[#7a9e8e]/20 cursor-pointer">Next Step</button>
+                  <button 
+                    key="next-btn"
+                    type="button" 
+                    onClick={() => setActiveTab(activeTab === 'basic' ? 'relations' : 'images')} 
+                    className="px-8 py-3 bg-[#7a9e8e] text-white font-bold rounded-2xl hover:bg-[#5a7a6b] transition shadow-lg shadow-[#7a9e8e]/20 cursor-pointer"
+                  >
+                    Next Step
+                  </button>
                 ) : (
-                  <button type="submit" form="create-product-form" disabled={mutation.isPending} className="px-10 py-3 bg-[#7a9e8e] text-white font-bold rounded-2xl hover:bg-[#5a7a6b] transition flex items-center justify-center gap-2 shadow-xl shadow-[#7a9e8e]/30 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer">
+                  <button 
+                    key="submit-btn"
+                    type="submit" 
+                    form="create-product-form" 
+                    disabled={mutation.isPending} 
+                    className="px-10 py-3 bg-[#7a9e8e] text-white font-bold rounded-2xl hover:bg-[#5a7a6b] transition flex items-center justify-center gap-2 shadow-xl shadow-[#7a9e8e]/30 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                  >
                     {mutation.isPending ? <><Loader2 size={20} className="animate-spin" />Creating...</> : 'Create Product'}
                   </button>
                 )}

@@ -4,474 +4,452 @@ import { Header } from '@/shared/components/header';
 import { Footer } from '@/shared/components/footer';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
-import { Heart, Share2, Star, Check } from 'lucide-react';
+import { useState, useEffect, useRef, use, useMemo } from 'react';
+import { 
+  Heart, 
+  Share2, 
+  Star, 
+  Check, 
+  ShoppingCart, 
+  ShieldCheck, 
+  Truck, 
+  Clock, 
+  ChevronRight,
+  Info,
+  ChevronLeft
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { getProductBySlug } from '@/modules/product/services/product.service';
+import { ProductSkeleton } from '@/modules/product/components/product-skeleton';
 
-// Mock product data - will be replaced with database calls
-const PRODUCTS: Record<string, any> = {
-  'gentle-foaming-cleanser': {
-    id: '1',
-    name: 'Gentle Foaming Cleanser',
-    slug: 'gentle-foaming-cleanser',
-    price: 28,
-    compareAtPrice: 35,
-    category: 'Cleansers',
-    description: 'Soft foam cleanser that removes impurities without stripping',
-    longDescription:
-      'Our gentle foaming cleanser removes makeup and impurities while maintaining your skin\'s natural pH balance. Perfect for all skin types, especially sensitive and combination skin. This luxurious formula creates a rich lather that feels wonderful on your face while being tough on dirt and makeup.',
-    imageUrl: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600&h=700&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600&h=700&fit=crop',
-    ],
-    rating: 4.5,
-    reviews: 128,
-    stock: 50,
-    size: '150ml',
-    skinTypes: ['Normal', 'Combination', 'Sensitive'],
-    concerns: [],
-    ingredients: ['Glycerin', 'Water', 'Cleanser Complex'],
-    benefits: [
-      'Removes makeup and impurities',
-      'Maintains skin pH balance',
-      'Suitable for all skin types',
-      'Sulfate-free formula',
-    ],
-    howToUse: 'Wet your face with lukewarm water. Apply a small amount of cleanser and massage gently in circular motions. Rinse thoroughly with water.',
-    reviews_list: [
-      {
-        id: 1,
-        author: 'Sarah M.',
-        rating: 5,
-        title: 'Best cleanser ever!',
-        content: 'My skin has never felt better. This cleanser is gentle yet effective.',
-      },
-      {
-        id: 2,
-        author: 'Emily J.',
-        rating: 4,
-        title: 'Great for sensitive skin',
-        content: 'No irritation, no dryness. Exactly what my sensitive skin needed.',
-      },
-    ],
-  },
-  'hydrating-essence-toner': {
-    id: '2',
-    name: 'Hydrating Essence Toner',
-    slug: 'hydrating-essence-toner',
-    price: 32,
-    compareAtPrice: 42,
-    category: 'Serums & Treatments',
-    description: 'Lightweight hydrating toner with hyaluronic acid',
-    longDescription:
-      'This essence toner provides lightweight hydration and prepares your skin for better absorption of serums and moisturizers. Contains hyaluronic acid for deep hydration, making it ideal for all skin types looking for that extra boost of moisture.',
-    imageUrl: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600&h=700&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600&h=700&fit=crop',
-    ],
-    rating: 4.8,
-    reviews: 256,
-    stock: 45,
-    size: '200ml',
-    skinTypes: ['Normal', 'Dry', 'Combination'],
-    concerns: ['Dryness'],
-    ingredients: ['Hyaluronic Acid', 'Glycerin', 'Plant Extracts'],
-    benefits: [
-      'Deep hydration',
-      'Improves product absorption',
-      'Lightweight texture',
-      'Brightens complexion',
-    ],
-    howToUse: 'After cleansing, apply with a cotton pad or spray directly onto face. Pat gently until absorbed. Follow with serum and moisturizer.',
-    reviews_list: [
-      {
-        id: 1,
-        author: 'Lisa K.',
-        rating: 5,
-        title: 'Game changer!',
-        content: 'My skin looks so plump and dewy after using this. Love it!',
-      },
-    ],
-  },
-  'vitamin-c-brightening-serum': {
-    id: '4',
-    name: 'Vitamin C Brightening Serum',
-    slug: 'vitamin-c-brightening-serum',
-    price: 45,
-    compareAtPrice: 60,
-    category: 'Serums & Treatments',
-    description: 'Stabilized vitamin C for brightening and protection',
-    longDescription:
-      'This potent vitamin C serum brightens dark spots and pigmentation while providing powerful antioxidant protection. Boosts collagen production for youthful skin.',
-    imageUrl: 'https://images.unsplash.com/photo-1599496257149-076fab403c4d?w=600&h=700&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1599496257149-076fab403c4d?w=600&h=700&fit=crop',
-    ],
-    rating: 4.7,
-    reviews: 342,
-    stock: 40,
-    size: '30ml',
-    skinTypes: ['Normal', 'Oily', 'Combination'],
-    concerns: ['Pigmentation', 'Wrinkles'],
-    ingredients: ['Vitamin C', 'Ferulic Acid', 'Vitamin E'],
-    benefits: [
-      'Brightens dark spots',
-      'Antioxidant protection',
-      'Boosts collagen',
-      'Evens skin tone',
-    ],
-    howToUse: 'Apply 2-3 drops to clean, dry skin in the morning. Gently pat until absorbed. Follow with sunscreen during the day.',
-    reviews_list: [],
-  },
-  'retinol-night-cream': {
-    id: '5',
-    name: 'Retinol Night Cream',
-    slug: 'retinol-night-cream',
-    price: 52,
-    compareAtPrice: 70,
-    category: 'Moisturizers',
-    description: 'Advanced retinol treatment for anti-aging',
-    longDescription:
-      'Our night cream features encapsulated retinol to minimize irritation while maximizing results. Reduces fine lines, wrinkles, and improves overall skin texture over time.',
-    imageUrl: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600&h=700&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600&h=700&fit=crop',
-    ],
-    rating: 4.9,
-    reviews: 501,
-    stock: 30,
-    size: '50ml',
-    skinTypes: ['Normal', 'Oily'],
-    concerns: ['Wrinkles'],
-    ingredients: ['Retinol', 'Hyaluronic Acid', 'Peptides'],
-    benefits: [
-      'Reduces fine lines',
-      'Improves texture',
-      'Anti-aging',
-      'Encapsulated formula',
-    ],
-    howToUse: 'Apply a small amount to clean, dry skin before bed. Use 2-3 times per week initially, then increase frequency as tolerated.',
-    reviews_list: [],
-  },
-  'daily-hydrating-moisturizer': {
-    id: '6',
-    name: 'Daily Hydrating Moisturizer',
-    slug: 'daily-hydrating-moisturizer',
-    price: 35,
-    compareAtPrice: 45,
-    category: 'Moisturizers',
-    description: 'Lightweight moisturizer for daily use',
-    longDescription:
-      'This lightweight moisturizer hydrates without feeling heavy. Perfect for morning use or as a base for makeup. Contains hyaluronic acid and niacinamide.',
-    imageUrl: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600&h=700&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600&h=700&fit=crop',
-    ],
-    rating: 4.7,
-    reviews: 418,
-    stock: 60,
-    size: '100ml',
-    skinTypes: ['Normal', 'Dry', 'Combination', 'Sensitive'],
-    concerns: ['Dryness', 'Sensitivity'],
-    ingredients: ['Hyaluronic Acid', 'Niacinamide', 'Ceramides'],
-    benefits: [
-      'Lightweight texture',
-      'Long-lasting hydration',
-      'Non-comedogenic',
-      'Suitable for all skin types',
-    ],
-    howToUse: 'Apply to clean skin morning and night. Use upward motions to apply. Can be used under makeup or sunscreen.',
-    reviews_list: [],
-  },
+// Extended Mock Data to match Hasaki details
+const MOCK_PRODUCT = {
+  id: 1,
+  name: "Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",
+  brand: "CeraVe",
+  slug: "sua-rua-mat-cerave-sach-sau-473ml",
+  price: 490000,
+  originalPrice: 535000,
+  category: "Sữa Rửa Mặt",
+  description: `
+    <div class="space-y-4">
+      <p>Hiện sản phẩm <strong>Sữa Rửa Mặt Cerave Sạch Sâu</strong> đã có mặt tại <strong>SkinMatch</strong> với 3 loại và 3 dung tích (88ml; 236ml; 473ml):</p>
+      <ul class="list-disc pl-5 space-y-1">
+        <li><strong>Sữa Rửa Mặt Cerave Sạch Sâu Cho Da Thường Đến Da Dầu</strong></li>
+        <li><strong>Sữa Rửa Mặt Cerave Làm Sạch & Tẩy Tế Bào Chết Dịu Nhẹ</strong></li>
+        <li><strong>Sữa Rửa Mặt Cerave Cho Da Khô</strong></li>
+      </ul>
+      <h3 class="text-lg font-bold mt-6">1. Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu</h3>
+      <p><strong>Sữa Rửa Mặt Cerave Foaming Cleanser</strong> kết cấu dạng gel tạo bọt rất lý tưởng để loại bỏ dầu thừa, bụi bẩn và lớp trang điểm với công thức nhẹ nhàng, không làm phá vỡ hàng rào bảo vệ tự nhiên của da và chứa các thành phần giúp duy trì độ ẩm cân bằng da.</p>
+    </div>
+  `,
+  ingredient_full_text: "Aqua/Water, Glycerin, Coco-Betaine, Propylene Glycol, Sodium Cocoyl Glycinate, Peg-120 Methyl Glucose Dioleate, Sodium Chloride, Acrylates Copolymer, Citric Acid, Capryloyl Glycine, Caprylyl Glycol, Sodium Hydroxide, Niacinamide, Disodium Edta, Sodium Hyaluronate, Sodium Lauroyl Lactylate, Ceramide Np, Phenoxyethanol, Ceramide Ap, Phytosphingosine, Cholesterol, Xanthan Gum, Carbomer, Ethylhexylglycerin, Ceramide Eop.",
+  usage_instructions: "Làm ướt da bằng nước ấm. Massage sữa rửa mặt vào da theo chuyển động tròn nhẹ nhàng. Rửa sạch lại với nước.",
+  images: [
+    { id: 1, image_url: "https://res.cloudinary.com/djrq6q1nx/image/upload/v1777831179/skinmatch/products/jydxi0a0vsvuvaymvq14.png", position: 0 },
+    { id: 2, image_url: "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-sua-rua-mat-cerave-sach-sau-cho-da-thuong-den-da-dau-473ml_1EM9SjWUk6UTus6S.png", position: 1 },
+    { id: 3, image_url: "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-sua-rua-mat-cerave-sach-sau-cho-da-thuong-den-da-dau-473ml-1741158164.jpg", position: 2 },
+  ],
+  badges: [
+    { id: 1, name: "Bán Chạy" },
+    { id: 2, name: "Chính Hãng" }
+  ],
+  rating: 4.9,
+  reviewsCount: 1250,
+  soldCount: 5000,
 };
 
-export default function ProductPage({ params }: { params: { slug: string } }) {
-  const product = PRODUCTS[params.slug];
-  const [quantity, setQuantity] = useState(1);
-  const [selectedTab, setSelectedTab] = useState('description');
-  const [isFavorite, setIsFavorite] = useState(false);
+const SECTIONS = [
+  { id: 'description', label: 'Mô tả' },
+  { id: 'ingredients', label: 'Thành phần' },
+  { id: 'usage', label: 'HDSD' },
+  { id: 'reviews', label: 'Đánh giá' }
+];
 
-  if (!product) {
+export default function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [showSticky, setShowSticky] = useState(false);
+  const [activeSection, setActiveSection] = useState('description');
+
+  const { data: productResponse, isLoading, error } = useQuery({
+    queryKey: ['product', slug],
+    queryFn: () => getProductBySlug(slug),
+  });
+
+  const apiProduct = productResponse?.data;
+  const productInfoRef = useRef<HTMLDivElement>(null);
+
+  const visibleSections = useMemo(() => {
+    if (!apiProduct) return SECTIONS;
+    return SECTIONS.filter(section => {
+      if (section.id === 'description') return !!apiProduct.description;
+      if (section.id === 'ingredients') return !!apiProduct.ingredient_full_text;
+      if (section.id === 'usage') return !!apiProduct.usage_instructions;
+      if (section.id === 'reviews') return true;
+      return true;
+    });
+  }, [apiProduct]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!productInfoRef.current) return;
+      const rect = productInfoRef.current.getBoundingClientRect();
+      setShowSticky(rect.bottom < 100);
+
+      for (const section of visibleSections) {
+        const element = document.getElementById(section.id);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 150 && rect.bottom >= 150) {
+            setActiveSection(section.id);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [visibleSections]);
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 120;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  if (isLoading) {
+    return <ProductSkeleton />;
+  }
+
+  if (error || !apiProduct) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="max-w-7xl mx-auto px-4 py-16">
-          <p>Product not found</p>
-          <Link href="/products" className="text-[#7a9e8e] hover:underline">
-            Back to products
-          </Link>
-        </div>
-        <Footer />
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Không tìm thấy sản phẩm</h1>
+        <p className="text-gray-600 mb-6">Sản phẩm bạn đang tìm kiếm có thể đã bị xóa hoặc không tồn tại.</p>
+        <Link href="/" className="bg-[#7a9e8e] text-white px-6 py-2 rounded-xl font-semibold">
+          Quay lại trang chủ
+        </Link>
       </div>
     );
   }
 
-  const discount = product.compareAtPrice
-    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
-    : 0;
+  // Merge API data with mock stats for UI completeness
+  const product = {
+    ...MOCK_PRODUCT,
+    ...apiProduct,
+    images: apiProduct.images || apiProduct.product_images || [],
+    brand: apiProduct.categories?.name || "SkinMatch",
+  };
+
+  const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#f8f9fa] font-sans">
       <Header />
 
-      {/* Breadcrumb */}
-      <div className="bg-white border-b border-[#e8e5dd]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <nav className="flex items-center gap-2 text-sm">
-            <Link href="/" className="text-[#7a9e8e] hover:underline">
-              Home
-            </Link>
-            <span className="text-gray-400">/</span>
-            <Link href="/products" className="text-[#7a9e8e] hover:underline">
-              Products
-            </Link>
-            <span className="text-gray-400">/</span>
-            <span className="text-gray-600">{product.name}</span>
-          </nav>
-        </div>
-      </div>
+      {/* Sticky Product Nav */}
+      <AnimatePresence>
+        {showSticky && (
+          <motion.div
+            initial={{ y: -100 }}
+            animate={{ y: 0 }}
+            exit={{ y: -100 }}
+            className="fixed top-0 left-0 right-0 z-[100] bg-white shadow-lg border-b border-gray-100"
+          >
+            <div className="max-w-[1240px] mx-auto px-4">
+              {/* Upper Sticky Part */}
+              <div className="flex items-center justify-between py-3 border-b border-gray-50">
+                <div className="flex items-center gap-4">
+                  <div className="relative w-12 h-12 bg-gray-50 rounded-lg overflow-hidden border border-gray-100 flex-shrink-0">
+                    <Image src={product.images[0].image_url} alt="" fill className="object-contain p-1" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-black text-gray-900 truncate max-w-[200px] md:max-w-[400px]">
+                      {product.name}
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-black text-[#326e51]">{product.price.toLocaleString('vi-VN')}₫</span>
+                      <span className="text-[10px] text-gray-400 line-through">{product.originalPrice.toLocaleString('vi-VN')}₫</span>
+                      <span className="text-[10px] font-bold text-[#326e51]">| {product.brand}</span>
+                    </div>
+                  </div>
+                </div>
+                <button className="px-6 py-2.5 bg-[#ff6f00] text-white text-xs font-black rounded-xl hover:bg-[#e66400] transition-colors flex items-center gap-2">
+                  <ShoppingCart size={16} />
+                  THÊM VÀO GIỎ HÀNG
+                </button>
+              </div>
 
-      {/* Product */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Product Images */}
-          <div>
-            <div className="relative h-96 lg:h-[600px] bg-gray-100 rounded-lg overflow-hidden mb-4">
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                className="object-cover"
-              />
-            </div>
-          </div>
-
-          {/* Product Info */}
-          <div className="space-y-6">
-            {/* Category & Title */}
-            <div>
-              <span className="inline-block px-3 py-1 bg-[#f5f2ed] text-[#7a9e8e] text-xs font-semibold rounded-full mb-3">
-                {product.category}
-              </span>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
-                {product.name}
-              </h1>
-            </div>
-
-            {/* Rating */}
-            <div className="flex items-center gap-4">
-              <div className="flex gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="w-5 h-5 fill-[#c9b896] text-[#c9b896]"
-                  />
+              {/* Navigation Tabs (Sticky) */}
+              <div className="flex gap-8 overflow-x-auto scrollbar-hide py-3">
+                {visibleSections.map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => scrollToSection(section.id)}
+                    className={`text-sm font-bold whitespace-nowrap transition-colors relative ${
+                      activeSection === section.id ? 'text-[#326e51]' : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                  >
+                    {section.label}
+                    {activeSection === section.id && (
+                      <motion.div layoutId="stickyNavLine" className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#326e51]" />
+                    )}
+                  </button>
                 ))}
               </div>
-              <span className="text-sm text-gray-600">
-                {product.rating} ({product.reviews} reviews)
-              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <main className="max-w-[1240px] mx-auto px-4 pt-24 pb-8 md:pt-28 md:pb-12">
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-1 text-[13px] text-gray-500 mb-6 overflow-x-auto whitespace-nowrap pb-2 scrollbar-hide">
+          <Link href="/" className="hover:text-[#326e51] transition-colors">Trang chủ</Link>
+          <ChevronRight size={14} />
+          <Link href="/products" className="hover:text-[#326e51] transition-colors">Sản phẩm</Link>
+          <ChevronRight size={14} />
+          <span className="text-gray-900 font-medium truncate">{product.name}</span>
+        </nav>
+
+        {/* Product Info Section */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+            {/* Gallery */}
+            <div className="lg:col-span-5 p-6 border-r border-gray-50">
+              <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-50 group">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeImageIndex}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="w-full h-full"
+                  >
+                    <Image
+                      src={product.images[activeImageIndex].image_url}
+                      alt={product.name}
+                      fill
+                      className="object-contain p-4"
+                      priority
+                    />
+                  </motion.div>
+                </AnimatePresence>
+                <div className="absolute inset-0 flex items-center justify-between px-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => setActiveImageIndex(prev => (prev > 0 ? prev - 1 : product.images.length - 1))} className="p-2 bg-white/90 rounded-full shadow-lg"><ChevronLeft size={20} /></button>
+                  <button onClick={() => setActiveImageIndex(prev => (prev < product.images.length - 1 ? prev + 1 : 0))} className="p-2 bg-white/90 rounded-full shadow-lg"><ChevronRight size={20} /></button>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-6 overflow-x-auto pb-2 scrollbar-hide">
+                {product.images.map((img, idx) => (
+                  <button
+                    key={img.id}
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all ${
+                      activeImageIndex === idx ? 'border-[#326e51] scale-105 shadow-md' : 'border-transparent'
+                    }`}
+                  >
+                    <Image src={img.image_url} alt="" fill className="object-cover" />
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Price */}
-            <div className="space-y-2">
-              <div className="flex items-baseline gap-3">
-                <span className="text-4xl font-bold text-gray-900">
-                  ${product.price}
-                </span>
-                {product.compareAtPrice && (
-                  <>
-                    <span className="text-xl text-gray-500 line-through">
-                      ${product.compareAtPrice}
-                    </span>
-                    <span className="px-3 py-1 bg-red-100 text-red-800 text-sm font-semibold rounded-full">
-                      Save {discount}%
-                    </span>
-                  </>
-                )}
-              </div>
-              {product.stock > 0 ? (
-                <p className="text-sm text-green-600 font-semibold">In Stock</p>
-              ) : (
-                <p className="text-sm text-red-600 font-semibold">Out of Stock</p>
-              )}
-            </div>
+            {/* Info */}
+            <div className="lg:col-span-7 p-8 md:p-10">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-[#326e51] font-bold uppercase tracking-wider text-sm">{product.brand}</span>
+                  <div className="flex gap-2">
+                    {product.badges.map(badge => (
+                      <span key={badge.id} className="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-black uppercase rounded-md border border-red-100">{badge.name}</span>
+                    ))}
+                  </div>
+                </div>
+                <h1 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">{product.name}</h1>
+                
+                <div className="flex items-center gap-6 border-y border-gray-50 py-4">
+                  <div className="flex items-center gap-1">
+                    <div className="flex gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={16} className="fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                    <span className="text-sm font-bold text-gray-900">{product.rating}</span>
+                  </div>
+                  <span className="text-sm text-gray-500 font-medium">{product.reviewsCount} Đánh giá</span>
+                  <span className="text-sm text-gray-500 font-medium">Đã bán {product.soldCount}+</span>
+                </div>
 
-            {/* Description */}
-            <p className="text-gray-700 leading-relaxed">
-              {product.longDescription}
-            </p>
+                <div className="p-6 bg-gray-50 rounded-2xl space-y-3">
+                  <div className="flex items-baseline gap-4">
+                    <span className="text-4xl font-black text-[#326e51]">{product.price.toLocaleString('vi-VN')}₫</span>
+                    <span className="text-lg text-gray-400 line-through">{product.originalPrice.toLocaleString('vi-VN')}₫</span>
+                    <span className="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded-lg">-{discount}%</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-red-500 text-xs font-bold">
+                    <Clock size={14} />
+                    <span>Giá tốt nhất trong 30 ngày qua</span>
+                  </div>
+                </div>
 
-            {/* Quick Info */}
-            <div className="bg-[#f5f2ed] rounded-lg p-4 space-y-2">
-              <div className="flex items-center gap-2">
-                <Check className="w-5 h-5 text-[#7a9e8e]" />
-                <span className="text-sm text-gray-700">Size: {product.size}</span>
+                {/* Actions */}
+                <div className="flex gap-3 h-14 pt-4">
+                  <button className="flex-[2] bg-[#326e51] text-white font-black rounded-2xl hover:bg-[#25543d] transition-all shadow-lg flex items-center justify-center gap-2">
+                    <ShoppingCart />
+                    THÊM VÀO GIỎ HÀNG
+                  </button>
+                  <button onClick={() => setIsFavorite(!isFavorite)} className={`w-14 flex items-center justify-center rounded-2xl border transition-all ${isFavorite ? 'bg-red-50 border-red-200 text-red-500' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
+                    <Heart fill={isFavorite ? 'currentColor' : 'none'} size={24} />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-5 h-5 text-[#7a9e8e]" />
-                <span className="text-sm text-gray-700">
-                  Suitable for: {product.skinTypes.join(', ')}
-                </span>
-              </div>
-            </div>
-
-            {/* Add to Cart */}
-            <div className="flex gap-4 items-center pt-4">
-              <div className="flex items-center border border-[#e8e5dd] rounded-lg">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-4 py-2 hover:bg-[#f5f2ed]"
-                >
-                  −
-                </button>
-                <span className="px-6 py-2 border-l border-r border-[#e8e5dd]">
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="px-4 py-2 hover:bg-[#f5f2ed]"
-                >
-                  +
-                </button>
-              </div>
-              <button
-                disabled={product.stock === 0}
-                className="flex-1 px-8 py-3 bg-[#7a9e8e] text-white font-semibold rounded-lg hover:bg-[#5a7a6b] transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Add to Cart
-              </button>
-              <button
-                onClick={() => setIsFavorite(!isFavorite)}
-                className="px-4 py-3 border border-[#e8e5dd] rounded-lg hover:bg-[#f5f2ed] transition"
-              >
-                <Heart
-                  className={`w-6 h-6 ${
-                    isFavorite
-                      ? 'fill-red-500 text-red-500'
-                      : 'text-gray-400'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Share */}
-            <div className="flex items-center gap-2 pt-4 border-t border-[#e8e5dd]">
-              <span className="text-sm text-gray-600">Share:</span>
-              <button className="p-2 hover:bg-[#f5f2ed] rounded-lg transition">
-                <Share2 className="w-5 h-5 text-gray-600" />
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="mt-16 border-t border-[#e8e5dd] pt-12">
-          <div className="flex gap-8 border-b border-[#e8e5dd] mb-8">
-            {['description', 'ingredients', 'reviews'].map((tab) => (
+        {/* Navigation Bar (Static) */}
+        <div ref={productInfoRef} className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-8 sticky top-[64px] z-40 lg:static">
+          <div className="flex gap-8 px-8 overflow-x-auto scrollbar-hide py-4">
+            {visibleSections.map((section) => (
               <button
-                key={tab}
-                onClick={() => setSelectedTab(tab)}
-                className={`pb-4 font-semibold capitalize ${
-                  selectedTab === tab
-                    ? 'text-[#7a9e8e] border-b-2 border-[#7a9e8e]'
-                    : 'text-gray-600 hover:text-gray-900'
+                key={section.id}
+                onClick={() => scrollToSection(section.id)}
+                className={`text-sm font-bold whitespace-nowrap transition-colors relative ${
+                  activeSection === section.id ? 'text-[#326e51]' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
-                {tab}
+                {section.label}
+                {activeSection === section.id && (
+                  <motion.div layoutId="staticNavLine" className="absolute -bottom-4 left-0 right-0 h-0.5 bg-[#326e51]" />
+                )}
               </button>
             ))}
           </div>
+        </div>
 
-          {/* Tab Content */}
-          <div>
-            {selectedTab === 'description' && (
-              <div className="space-y-6 max-w-2xl">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Benefits
-                  </h3>
-                  <ul className="space-y-2">
-                    {product.benefits.map((benefit: string, i: number) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-[#7a9e8e] flex-shrink-0 mt-0.5" />
-                        <span className="text-gray-700">{benefit}</span>
-                      </li>
-                    ))}
-                  </ul>
+        {/* Sequential Sections */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-9 space-y-8">
+            {/* Description Section */}
+            {product.description && (
+              <section id="description" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-50 bg-gray-50/30">
+                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Thông tin sản phẩm</h3>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    How to Use
-                  </h3>
-                  <p className="text-gray-700 leading-relaxed">
-                    {product.howToUse}
-                  </p>
+                <div className="p-8">
+                  <div className="prose prose-slate max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5" dangerouslySetInnerHTML={{ __html: product.description }} />
                 </div>
-              </div>
+              </section>
             )}
 
-            {selectedTab === 'ingredients' && (
-              <div className="max-w-2xl">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Key Ingredients
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {product.ingredients.map((ingredient: string, i: number) => (
-                    <div key={i} className="p-4 bg-[#f5f2ed] rounded-lg">
-                      <p className="font-semibold text-gray-900">
-                        {ingredient}
-                      </p>
-                    </div>
-                  ))}
+            {/* Ingredients Section */}
+            {product.ingredient_full_text && (
+              <section id="ingredients" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-50 bg-gray-50/30">
+                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Thành phần chính</h3>
                 </div>
-              </div>
+                <div className="p-8 space-y-6">
+                  {/* <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 flex gap-4">
+                    <Info size={24} className="text-blue-600 flex-shrink-0" />
+                    <p className="text-xs text-blue-700 leading-relaxed font-medium">Bảng thành phần có thể thay đổi theo lô sản xuất. Vui lòng tham khảo bao bì thực tế.</p>
+                  </div> */}
+                  <div className="prose prose-slate max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5" dangerouslySetInnerHTML={{ __html: product.ingredient_full_text }} />
+                </div>
+              </section>
             )}
 
-            {selectedTab === 'reviews' && (
-              <div className="max-w-2xl">
-                {product.reviews_list.length > 0 ? (
-                  <div className="space-y-6">
-                    {product.reviews_list.map(
-                      (review: any) => (
-                        <div
-                          key={review.id}
-                          className="border-b border-[#e8e5dd] pb-6"
-                        >
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="flex gap-1">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`w-4 h-4 ${
-                                    i < review.rating
-                                      ? 'fill-[#c9b896] text-[#c9b896]'
-                                      : 'fill-gray-300 text-gray-300'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <h4 className="font-semibold text-gray-900 mb-1">
-                            {review.title}
-                          </h4>
-                          <p className="text-sm text-gray-600 mb-2">
-                            By {review.author}
-                          </p>
-                          <p className="text-gray-700">{review.content}</p>
+            {/* Usage Section */}
+            {product.usage_instructions && (
+              <section id="usage" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 md:p-8 border-b border-gray-50 bg-gray-50/30">
+                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Hướng dẫn sử dụng</h3>
+                </div>
+                <div className="p-8">
+                  <div className="prose prose-slate max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5" dangerouslySetInnerHTML={{ __html: product.usage_instructions }} />
+                </div>
+              </section>
+            )}
+
+            {/* Reviews Section */}
+            <section id="reviews" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6 md:p-8 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
+                <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Đánh giá từ khách hàng</h3>
+                <div className="flex items-center gap-2">
+                  <Star className="fill-yellow-400 text-yellow-400" size={18} />
+                  <span className="font-bold text-gray-900">{product.rating}/5</span>
+                  <span className="text-sm text-gray-500">({product.reviewsCount} nhận xét)</span>
+                </div>
+              </div>
+              <div className="p-8 md:p-10 space-y-8">
+                {[
+                  { id: 1, user: "Nguyễn An", rating: 5, date: "02/05/2026", content: "Sản phẩm dùng rất tốt, bọt mịn và sạch sâu mà không khô da. Đã mua lần thứ 3 tại SkinMatch." },
+                  { id: 2, user: "Trần Bình", rating: 4, date: "28/04/2026", content: "Giao hàng nhanh, đóng gói cẩn thận. Sữa rửa mặt này thì quá nổi tiếng rồi, dùng cho da dầu cực hợp." },
+                  { id: 3, user: "Lê Chi", rating: 5, date: "15/04/2026", content: "Hàng chính hãng, check mã vạch chuẩn. Sẽ tiếp tục ủng hộ shop." },
+                  { id: 4, user: "Phạm Dương", rating: 5, date: "10/04/2026", content: "Dung tích lớn dùng được lâu, rất tiết kiệm. Da mình nhạy cảm nhưng dùng vẫn rất êm." }
+                ].map(review => (
+                  <div key={review.id} className="pb-8 border-b border-gray-50 last:border-0 last:pb-0">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-[#326e51]">
+                          {review.user.charAt(0)}
                         </div>
-                      )
-                    )}
+                        <div>
+                          <p className="text-sm font-black text-gray-900">{review.user}</p>
+                          <div className="flex gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} size={12} className={i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'} />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-400">{review.date}</span>
+                    </div>
+                    <p className="text-sm text-gray-600 leading-relaxed pl-13">
+                      {review.content}
+                    </p>
                   </div>
-                ) : (
-                  <p className="text-gray-600">
-                    No reviews yet. Be the first to review this product!
-                  </p>
-                )}
+                ))}
+                <button className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl text-gray-400 text-sm font-bold hover:border-[#326e51] hover:text-[#326e51] transition-all">
+                  XEM THÊM ĐÁNH GIÁ
+                </button>
               </div>
-            )}
+            </section>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-3 space-y-6">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 sticky top-48">
+              <h4 className="font-black text-gray-900 mb-4 flex items-center gap-2">
+                <ShieldCheck className="text-[#326e51]" />
+                Cam kết SkinMatch
+              </h4>
+              <ul className="space-y-4">
+                {["100% Hàng chính hãng", "Giao hàng nhanh 2H", "Đổi trả 15 ngày"].map(c => (
+                  <li key={c} className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                    <Check size={16} className="text-green-500" />
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
 
       <Footer />
     </div>

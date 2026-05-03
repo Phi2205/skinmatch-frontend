@@ -26,6 +26,26 @@ export const getProducts = async (params: ProductQueryParams = {}): Promise<Pagi
     }
 }
 
+export const getProductById = async (id: number): Promise<ApiResponse<Product>> => {
+    try {
+        const response = await axiosInstance.get<ApiResponse<Product>>(`/products/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching product by ID:', error);
+        throw error;
+    }
+}
+
+export const getProductBySlug = async (slug: string): Promise<ApiResponse<Product>> => {
+    try {
+        const response = await axiosInstance.get<ApiResponse<Product>>(`/products/slug/${slug}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error fetching product with slug ${slug}:`, error);
+        throw error;
+    }
+}
+
 export const createProduct = async (data: FormData): Promise<ApiResponse<Product>> => {
     try {
         const response = await axiosInstance.post<ApiResponse<Product>>('/products', data, {
@@ -70,6 +90,78 @@ export const updateProductStatus = async (id: number, is_active: boolean): Promi
         return response.data;
     } catch (error) {
         console.error('Error updating product status:', error);
+        throw error;
+    }
+}
+
+export const getProductsByBadgeSlug = async (slug: string, page: number, limit: number): Promise<PaginatedResponse<Product>> => {
+    try {
+        const response = await axiosInstance.get<PaginatedResponse<Product>>(`/products/filter-by/badge/${slug}`, { params: { page, limit } });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching products by badge slug:', error);
+        throw error;
+    }
+}
+
+export const addProductImages = async (productId: number, data: FormData): Promise<ApiResponse<any>> => {
+    try {
+        const response = await axiosInstance.post<ApiResponse<any>>(`/products/${productId}/images`, data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding product images:', error);
+        throw error;
+    }
+}
+
+export const addSingleProductImage = async (productId: number, data: FormData): Promise<ApiResponse<any>> => {
+    try {
+        const response = await axiosInstance.post<ApiResponse<any>>(`/products/${productId}/images/single`, data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding single product image:', error);
+        throw error;
+    }
+}
+
+export const updateProductImage = async (productId: number, imageId: number, data: FormData): Promise<ApiResponse<any>> => {
+    try {
+        const response = await axiosInstance.patch<ApiResponse<any>>(`/products/${productId}/images/${imageId}`, data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating product image:', error);
+        throw error;
+    }
+}
+
+export const deleteProductImage = async (productId: number, imageId: number): Promise<ApiResponse<any>> => {
+    try {
+        const response = await axiosInstance.delete<ApiResponse<any>>(`/products/${productId}/images/${imageId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error deleting product image:', error);
+        throw error;
+    }
+}
+
+export const reorderProductImages = async (productId: number, images: { id: number; position: number }[]): Promise<ApiResponse<any>> => {
+    try {
+        const response = await axiosInstance.patch<ApiResponse<any>>(`/products/${productId}/images/reorder`, { images });
+        return response.data;
+    } catch (error) {
+        console.error('Error reordering product images:', error);
         throw error;
     }
 }
