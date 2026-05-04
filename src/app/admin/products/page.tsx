@@ -22,7 +22,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProducts, updateProductStatus, deleteProduct } from '@/modules/product/services/product.service';
 import { getAllCategories } from '@/modules/category/services/category.service';
 import { Product, ProductQueryParams } from '@/modules/product/types/product.type';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 import { Switch } from '@/shared/components/ui/switch';
 import { CreateProductModal } from '@/modules/product/components/create-product-modal';
 import { UpdateProductModal } from '@/modules/product/components/update-product-modal';
@@ -571,7 +571,7 @@ export default function AdminProducts() {
         product={selectedProduct}
       />
 
-      <Toaster richColors position="top-right" />
+
     </div>
   );
 }

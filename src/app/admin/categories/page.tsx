@@ -18,7 +18,7 @@ import { getAllCategories, updateStatusCategory } from '@/modules/category/servi
 import { CreateCategoryModal } from '@/modules/category/components/create-category-modal';
 import { UpdateCategoryModal } from '@/modules/category/components/update-category-modal';
 import { Category } from '@/modules/category/types/category.type';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 import { Switch } from '@/shared/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 
@@ -233,7 +233,7 @@ export default function AdminCategories() {
         onClose={() => setEditingCategory(null)}
       />
       
-      <Toaster richColors position="top-right" />
+
     </div>
   );
 }

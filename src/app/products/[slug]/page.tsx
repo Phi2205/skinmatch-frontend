@@ -25,6 +25,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { getProductBySlug } from '@/modules/product/services/product.service';
 import { ProductSkeleton } from '@/modules/product/components/product-skeleton';
+import { useCart } from '@/modules/cart/hooks/useCart';
+import { toast } from 'sonner';
 
 // Extended Mock Data to match Hasaki details
 const MOCK_PRODUCT = {
@@ -79,6 +81,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [activeSection, setActiveSection] = useState('description');
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const { addItem } = useCart();
+  const [quantity, setQuantity] = useState(1);
 
   const { data: productResponse, isLoading, error } = useQuery({
     queryKey: ['product', slug],
@@ -167,16 +171,32 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const product = {
     ...MOCK_PRODUCT,
     ...apiProduct,
-    images: apiProduct.images || apiProduct.product_images || [],
+    images: (apiProduct.images?.length ? apiProduct.images : (apiProduct.product_images?.length ? apiProduct.product_images : [])) as any[],
     brand: (apiProduct.categories && apiProduct.categories.length > 0) ? apiProduct.categories[0].name : "SkinMatch",
     variants: apiProduct.variants || [],
   };
+
+  // Ensure there is at least one image for the UI to avoid crashes
+  if (product.images.length === 0) {
+    product.images = [{ 
+      id: 0, 
+      image_url: apiProduct.image_url || '/placeholder.png', 
+      position: 0 
+    }];
+  }
 
   const selectedVariant = product.variants.find(v => v.id === selectedVariantId) || product.variants[0];
   const currentPrice = selectedVariant?.price || product.price;
   const currentOriginalPrice = product.originalPrice; // or variant specific if available
   const discount = currentOriginalPrice ? Math.round(((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100) : 0;
-
+  const handleAddToCart = async () => {
+    if (!apiProduct) return;
+    try {
+      await addItem(apiProduct, quantity, selectedVariantId || undefined);
+    } catch (error) {
+      console.error('Add to cart error:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] font-sans">
@@ -196,7 +216,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               <div className="flex items-center justify-between py-3 border-b border-gray-50">
                 <div className="flex items-center gap-4">
                   <div className="relative w-12 h-12 bg-gray-50 rounded-lg overflow-hidden border border-gray-100 flex-shrink-0">
-                    <Image src={product.images[0].image_url} alt="" fill className="object-contain p-1" />
+                    <Image src={product.images[0]?.image_url || '/placeholder.png'} alt="" fill className="object-contain p-1" />
                   </div>
                   <div>
                     <h2 className="text-sm font-black text-gray-900 truncate max-w-[200px] md:max-w-[400px]">
@@ -209,7 +229,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </div>
                   </div>
                 </div>
-                <button className="px-6 py-2.5 bg-[#ff6f00] text-white text-xs font-black rounded-xl hover:bg-[#e66400] transition-colors flex items-center gap-2 cursor-pointer">
+                <button 
+                  onClick={handleAddToCart}
+                  className="px-6 py-2.5 bg-[#ff6f00] text-white text-xs font-black rounded-xl hover:bg-[#e66400] transition-colors flex items-center gap-2 cursor-pointer"
+                >
                   <ShoppingCart size={16} />
                   THÊM VÀO GIỎ HÀNG
                 </button>
@@ -261,7 +284,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     className="w-full h-full"
                   >
                     <Image
-                      src={product.images[activeImageIndex].image_url}
+                      src={product.images[activeImageIndex]?.image_url || '/placeholder.png'}
                       alt={product.name}
                       fill
                       className="object-contain p-4"
@@ -326,20 +349,45 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   </div>
                   
                   {product.variants.length > 0 && (
-                    <div className="space-y-3 pt-2">
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Chọn dung tích:</p>
-                      <div className="flex flex-wrap gap-2">
+                    <div className="space-y-4 pt-4 border-t border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                          {product.variants[0]?.attributes?.[0]?.name || 'Phiên bản'}
+                        </p>
+                        {selectedVariant && selectedVariant.stock !== undefined && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            selectedVariant.stock > 0 
+                              ? 'bg-green-50 text-green-600' 
+                              : 'bg-red-50 text-red-600'
+                          }`}>
+                            {selectedVariant.stock > 0 ? `Còn ${selectedVariant.stock} sản phẩm` : 'Hết hàng'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2.5">
                         {product.variants.map((v) => (
                           <button
                             key={v.id}
+                            disabled={v.stock === 0}
                             onClick={() => setSelectedVariantId(v.id || null)}
-                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer border-2 ${
+                            className={`group relative px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 border-2 flex flex-col items-center min-w-[80px] cursor-pointer ${
                               selectedVariant?.id === v.id
-                                ? 'bg-[#326e51] text-white border-[#326e51] shadow-md'
-                                : 'bg-white text-gray-600 border-gray-100 hover:border-[#326e51]'
+                                ? 'bg-[#326e51] text-white border-[#326e51] shadow-lg shadow-[#326e51]/20 scale-105'
+                                : v.stock === 0
+                                  ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed opacity-60'
+                                  : 'bg-white text-gray-700 border-gray-100 hover:border-[#326e51] hover:text-[#326e51]'
                             }`}
                           >
-                            {v.volume}
+                            <span className="relative z-10">
+                              {v.attributes.map(a => a.value).join(' / ')}
+                            </span>
+                            {selectedVariant?.id === v.id && (
+                              <motion.div 
+                                layoutId="activeVariant"
+                                className="absolute inset-0 bg-[#326e51] rounded-2xl -z-10"
+                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                              />
+                            )}
                           </button>
                         ))}
                       </div>
@@ -354,7 +402,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
                 {/* Actions */}
                 <div className="flex gap-3 h-14 pt-4">
-                  <button className="flex-[2] bg-[#326e51] text-white font-black rounded-2xl hover:bg-[#25543d] transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer">
+                  <button 
+                    onClick={handleAddToCart}
+                    className="flex-[2] bg-[#326e51] text-white font-black rounded-2xl hover:bg-[#25543d] transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  >
                     <ShoppingCart />
                     THÊM VÀO GIỎ HÀNG
                   </button>

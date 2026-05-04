@@ -35,10 +35,14 @@ const productSchema = zod.object({
   name: zod.string().min(2, 'Name must be at least 2 characters'),
   variants: zod.array(zod.object({
     id: zod.number().optional(),
-    volume: zod.string().min(1, 'Volume is required'),
     price: zod.preprocess((val) => Number(val), zod.number().min(0, 'Price must be at least 0')),
     sku: zod.string().optional().nullable(),
     stock: zod.preprocess((val) => Number(val), zod.number().min(0).default(0)),
+    attributes: zod.array(zod.object({
+      id: zod.number().optional(),
+      name: zod.string().min(1, 'Name is required'),
+      value: zod.string().min(1, 'Value is required'),
+    })).min(1, 'At least one attribute is required'),
   })).min(1, 'At least one variant is required'),
   category_ids: zod.array(zod.number()).default([]),
   summary: zod.string().optional().nullable(),
@@ -60,6 +64,64 @@ interface UpdateProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: Product | null;
+}
+
+// Component for nested attributes array
+function VariantAttributesFieldArray({ 
+  variantIndex, 
+  control, 
+  register,
+  errors 
+}: { 
+  variantIndex: number, 
+  control: any, 
+  register: any,
+  errors: any
+}) {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `variants.${variantIndex}.attributes`
+  });
+
+  return (
+    <div className="w-full space-y-2">
+      <div className="flex flex-wrap gap-2">
+        {fields.map((field, attrIndex) => (
+          <div key={field.id} className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg p-1 pr-2 shadow-sm">
+            <input
+              {...register(`variants.${variantIndex}.attributes.${attrIndex}.name` as const)}
+              placeholder="Name"
+              className="w-16 px-1.5 py-0.5 text-[10px] font-bold border-none bg-gray-50 rounded focus:ring-1 focus:ring-[#7a9e8e] transition"
+            />
+            <span className="text-gray-300">:</span>
+            <input
+              {...register(`variants.${variantIndex}.attributes.${attrIndex}.value` as const)}
+              placeholder="Value"
+              className="w-20 px-1.5 py-0.5 text-[10px] border-none bg-gray-50 rounded focus:ring-1 focus:ring-[#7a9e8e] transition"
+            />
+            <button
+              type="button"
+              onClick={() => remove(attrIndex)}
+              className="ml-1 text-gray-300 hover:text-red-500 transition cursor-pointer"
+              disabled={fields.length === 1}
+            >
+              <X size={12} />
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => append({ name: '', value: '' })}
+          className="px-2 py-1 bg-white border border-dashed border-gray-300 text-gray-400 rounded-lg hover:border-[#7a9e8e] hover:text-[#7a9e8e] transition text-[10px] flex items-center gap-1 cursor-pointer"
+        >
+          <Plus size={10} /> Add Attribute
+        </button>
+      </div>
+      {errors.variants?.[variantIndex]?.attributes && (
+        <p className="text-[10px] text-red-500">{errors.variants[variantIndex].attributes.message}</p>
+      )}
+    </div>
+  );
 }
 
 export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductModalProps) {
@@ -109,12 +171,14 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
         variants: productDetail.variants?.length 
           ? productDetail.variants.map(v => ({
               id: v.id,
-              volume: v.volume,
               price: v.price,
               sku: v.sku,
-              stock: v.stock
+              stock: v.stock,
+              attributes: v.attributes?.length 
+                ? v.attributes.map(a => ({ id: a.id, name: a.name, value: a.value }))
+                : [{ name: 'volume', value: '' }]
             }))
-          : [{ volume: '', price: 0, sku: '', stock: 0 }],
+          : [{ price: 0, sku: '', stock: 0, attributes: [{ name: 'volume', value: '' }] }],
         category_ids: productDetail.categories?.map(c => c.id) || [],
         summary: productDetail.summary,
         description: productDetail.description,
@@ -163,7 +227,7 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
     enabled: isOpen 
   });
   const { data: skinTypesResponse } = useQuery({ 
-    queryKey: ['skin-types'], 
+    queryKey: ['skin_types'], 
     queryFn: getAllSkinTypes,
     enabled: isOpen 
   });
@@ -215,7 +279,11 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
     // Basic fields
     formData.append('name', data.name);
     // Strip IDs before sending to backend because it recreates variants
-    formData.append('variants', JSON.stringify(data.variants.map(({ id, ...v }) => v)));
+    // Strip IDs from variants and attributes before sending to backend because it recreates variants
+    formData.append('variants', JSON.stringify(data.variants.map(({ id, attributes, ...v }) => ({
+      ...v,
+      attributes: attributes.map(({ id: attrId, ...attr }) => attr)
+    }))));
     if (data.summary) formData.append('summary', data.summary);
     if (data.description) formData.append('description', data.description);
     if (data.ingredient_full_text) formData.append('ingredient_full_text', data.ingredient_full_text);
@@ -243,7 +311,7 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
   const handleClose = () => {
     reset({
       name: '',
-      variants: [{ volume: '', price: 0, sku: '', stock: 0 }],
+      variants: [{ price: 0, sku: '', stock: 0, attributes: [{ name: 'volume', value: '' }] }],
       category_ids: [],
       summary: '',
       description: '',
@@ -483,7 +551,7 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
                           <label className="text-sm font-bold text-gray-900">Product Variants (Volume & Price)</label>
                           <button
                             type="button"
-                            onClick={() => append({ volume: '', price: 0, sku: '', stock: 0 })}
+                            onClick={() => append({ price: 0, sku: '', stock: 0, attributes: [{ name: 'volume', value: '' }] })}
                             className="flex items-center gap-2 px-3 py-1.5 bg-[#7a9e8e]/10 text-[#7a9e8e] rounded-xl hover:bg-[#7a9e8e] hover:text-white transition text-xs font-bold cursor-pointer"
                           >
                             <Plus size={14} />
@@ -493,50 +561,53 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
 
                         <div className="space-y-4">
                           {fields.map((field, index) => (
-                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-2xl relative group">
-                              <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase">Volume/Size</label>
-                                <input
-                                  {...register(`variants.${index}.volume` as const)}
-                                  placeholder="e.g. 50ml"
-                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#7a9e8e] transition text-sm"
-                                />
+                            <div key={field.id} className="p-4 bg-gray-50 rounded-2xl relative group space-y-4">
+                              <div className="flex justify-between items-start">
+                                <span className="text-[10px] font-bold text-[#7a9e8e] bg-[#7a9e8e]/10 px-2 py-1 rounded-lg">Variant #{index + 1}</span>
+                                {fields.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => remove(index)}
+                                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                )}
                               </div>
-                              <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase">Price (VND)</label>
-                                <input
-                                  type="number"
-                                  {...register(`variants.${index}.price` as const)}
-                                  placeholder="0"
-                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#7a9e8e] transition text-sm"
-                                />
-                              </div>
-                              <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase">SKU</label>
-                                <input
-                                  {...register(`variants.${index}.sku` as const)}
-                                  placeholder="SKU..."
-                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#7a9e8e] transition text-sm"
-                                />
-                              </div>
-                              <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase">Stock</label>
-                                <div className="flex gap-2">
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase">Price (VND)</label>
+                                  <input
+                                    type="number"
+                                    {...register(`variants.${index}.price` as const)}
+                                    placeholder="0"
+                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#7a9e8e] transition text-sm font-bold"
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase">SKU</label>
+                                  <input
+                                    {...register(`variants.${index}.sku` as const)}
+                                    placeholder="SKU..."
+                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#7a9e8e] transition text-sm"
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase">Stock</label>
                                   <input
                                     type="number"
                                     {...register(`variants.${index}.stock` as const)}
                                     placeholder="0"
-                                    className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#7a9e8e] transition text-sm"
+                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#7a9e8e] transition text-sm"
                                   />
-                                  {fields.length > 1 && (
-                                    <button
-                                      type="button"
-                                      onClick={() => remove(index)}
-                                      className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer"
-                                    >
-                                      <Trash2 size={16} />
-                                    </button>
-                                  )}
+                                </div>
+                              </div>
+
+                              <div className="space-y-3 pt-2 border-t border-gray-200/50">
+                                <div className="flex items-center justify-between">
+                                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Attributes (e.g. Volume, Color)</label>
+                                  <VariantAttributesFieldArray variantIndex={index} control={control} register={register} errors={errors} />
                                 </div>
                               </div>
                             </div>

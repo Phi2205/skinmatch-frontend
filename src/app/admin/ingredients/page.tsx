@@ -14,7 +14,7 @@ import { getAllIngredients, deleteIngredient } from '@/modules/ingredients/servi
 import { CreateIngredientModal } from '@/modules/ingredients/components/create-ingredient-modal';
 import { UpdateIngredientModal } from '@/modules/ingredients/components/update-ingredient-modal';
 import { Ingredient } from '@/modules/ingredients/types/ingredient.type';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 
 const removeAccents = (str: string) => {
   return str
@@ -195,7 +195,7 @@ export default function AdminIngredients() {
         onClose={() => setEditingIngredient(null)}
       />
       
-      <Toaster richColors position="top-right" />
+
     </div>
   );
 }

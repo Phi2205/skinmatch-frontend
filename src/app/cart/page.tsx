@@ -5,21 +5,51 @@ import { Footer } from '@/shared/components/footer';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/modules/cart/hooks/useCart';
-import { Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/contexts/authContext';
+import { Trash2, Plus, Minus, ArrowRight, Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, total } = useCart();
+  const { items, removeItem, updateQuantity, total, isLoading: isCartLoading } = useCart();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push('/login?redirect=/cart');
+    }
+  }, [isAuthenticated, isAuthLoading, router]);
 
   const shipping = items.length > 0 ? 10 : 0;
   const tax = (total + shipping) * 0.1;
   const grandTotal = total + shipping + tax;
+
+  if (isAuthLoading || isCartLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center pt-20">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 text-[#7a9e8e] animate-spin" />
+            <p className="text-gray-600 animate-pulse">Loading your cart...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null; // Will be redirected by useEffect
+  }
 
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Header />
 
-        <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="flex-1 flex items-center justify-center px-4 pt-32 pb-12">
           <div className="text-center">
             <div className="w-24 h-24 bg-[#f5f2ed] rounded-full flex items-center justify-center mx-auto mb-6">
               <svg
@@ -60,7 +90,7 @@ export default function CartPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
 
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
+      <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-28 pb-12">
         {/* Page Title */}
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
 
@@ -90,8 +120,19 @@ export default function CartPage() {
                   >
                     {item.name}
                   </Link>
+                  
+                  {item.attributes && item.attributes.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {item.attributes.map((attr, idx) => (
+                        <span key={idx} className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                          {attr.name}: {attr.value}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   <p className="text-2xl font-bold text-gray-900 mb-4">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    {(item.price * item.quantity).toLocaleString('vi-VN')}₫
                   </p>
 
                   {/* Quantity Controls */}
@@ -142,19 +183,19 @@ export default function CartPage() {
                 <div className="flex justify-between">
                   <span className="text-gray-700">Subtotal</span>
                   <span className="font-semibold text-gray-900">
-                    ${total.toFixed(2)}
+                    {total.toLocaleString('vi-VN')}₫
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-700">Shipping</span>
                   <span className="font-semibold text-gray-900">
-                    ${shipping.toFixed(2)}
+                    {shipping.toLocaleString('vi-VN')}₫
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-700">Tax</span>
                   <span className="font-semibold text-gray-900">
-                    ${tax.toFixed(2)}
+                    {tax.toLocaleString('vi-VN')}₫
                   </span>
                 </div>
               </div>
@@ -163,7 +204,7 @@ export default function CartPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-bold text-gray-900">Total</span>
                   <span className="text-2xl font-bold text-[#7a9e8e]">
-                    ${grandTotal.toFixed(2)}
+                    {grandTotal.toLocaleString('vi-VN')}₫
                   </span>
                 </div>
               </div>
@@ -189,7 +230,7 @@ export default function CartPage() {
               <div className="mt-6 pt-6 border-t border-[#e8e5dd] space-y-3 text-sm text-gray-600">
                 <div className="flex items-start gap-3">
                   <span className="text-lg">✓</span>
-                  <span>Free shipping on orders over $50</span>
+                  <span>Miễn phí vận chuyển cho đơn hàng trên 500.000₫</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-lg">✓</span>

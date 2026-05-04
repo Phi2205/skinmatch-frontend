@@ -14,7 +14,7 @@ import { getAllSkinTypes, deleteSkinType } from '@/modules/skin-types/services/s
 import { CreateSkinTypeModal } from '@/modules/skin-types/components/create-skin-type-modal';
 import { UpdateSkinTypeModal } from '@/modules/skin-types/components/update-skin-type-modal';
 import { SkinType } from '@/modules/skin-types/types/skin-type.type';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 
 const removeAccents = (str: string) => {
   return str
@@ -199,7 +199,7 @@ export default function AdminSkinTypes() {
         onClose={() => setEditingSkinType(null)}
       />
       
-      <Toaster richColors position="top-right" />
+
     </div>
   );
 }
