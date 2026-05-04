@@ -5,18 +5,19 @@ import { Footer } from '@/shared/components/footer';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useRef, use, useMemo } from 'react';
-import { 
-  Heart, 
-  Share2, 
-  Star, 
-  Check, 
-  ShoppingCart, 
-  ShieldCheck, 
-  Truck, 
-  Clock, 
+import {
+  Heart,
+  Share2,
+  Star,
+  Check,
+  ShoppingCart,
+  ShieldCheck,
+  Truck,
+  Clock,
   ChevronRight,
   Info,
-  ChevronLeft
+  ChevronLeft,
+  ArrowUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -72,7 +73,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState('description');
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
 
   const { data: productResponse, isLoading, error } = useQuery({
     queryKey: ['product', slug],
@@ -95,10 +98,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   useEffect(() => {
     const handleScroll = () => {
+      // Sticky nav logic
       if (!productInfoRef.current) return;
       const rect = productInfoRef.current.getBoundingClientRect();
       setShowSticky(rect.bottom < 100);
 
+      // Section highlight logic
       for (const section of visibleSections) {
         const element = document.getElementById(section.id);
         if (element) {
@@ -109,6 +114,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           }
         }
       }
+
+      // Scroll to top button logic
+      setShowScrollTop(window.scrollY > 500);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -152,10 +160,20 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     ...MOCK_PRODUCT,
     ...apiProduct,
     images: apiProduct.images || apiProduct.product_images || [],
-    brand: apiProduct.categories?.name || "SkinMatch",
+    brand: (apiProduct.categories && apiProduct.categories.length > 0) ? apiProduct.categories[0].name : "SkinMatch",
+    variants: apiProduct.variants || [],
   };
 
-  const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
+  const selectedVariant = product.variants.find(v => v.id === selectedVariantId) || product.variants[0];
+  const currentPrice = selectedVariant?.price || product.price;
+  const currentOriginalPrice = product.originalPrice; // or variant specific if available
+  const discount = currentOriginalPrice ? Math.round(((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100) : 0;
+
+  useEffect(() => {
+    if (product.variants.length > 0 && !selectedVariantId) {
+      setSelectedVariantId(product.variants[0].id || null);
+    }
+  }, [product.variants, selectedVariantId]);
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] font-sans">
@@ -182,13 +200,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       {product.name}
                     </h2>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-black text-[#326e51]">{product.price.toLocaleString('vi-VN')}₫</span>
-                      <span className="text-[10px] text-gray-400 line-through">{product.originalPrice.toLocaleString('vi-VN')}₫</span>
+                      <span className="text-sm font-black text-[#326e51]">{currentPrice.toLocaleString('vi-VN')}₫</span>
+                      {currentOriginalPrice && <span className="text-[10px] text-gray-400 line-through">{currentOriginalPrice.toLocaleString('vi-VN')}₫</span>}
                       <span className="text-[10px] font-bold text-[#326e51]">| {product.brand}</span>
                     </div>
                   </div>
                 </div>
-                <button className="px-6 py-2.5 bg-[#ff6f00] text-white text-xs font-black rounded-xl hover:bg-[#e66400] transition-colors flex items-center gap-2">
+                <button className="px-6 py-2.5 bg-[#ff6f00] text-white text-xs font-black rounded-xl hover:bg-[#e66400] transition-colors flex items-center gap-2 cursor-pointer">
                   <ShoppingCart size={16} />
                   THÊM VÀO GIỎ HÀNG
                 </button>
@@ -200,9 +218,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   <button
                     key={section.id}
                     onClick={() => scrollToSection(section.id)}
-                    className={`text-sm font-bold whitespace-nowrap transition-colors relative ${
-                      activeSection === section.id ? 'text-[#326e51]' : 'text-gray-400 hover:text-gray-600'
-                    }`}
+                    className={`text-sm font-bold whitespace-nowrap transition-colors relative cursor-pointer ${activeSection === section.id ? 'text-[#326e51]' : 'text-gray-400 hover:text-gray-600'
+                      }`}
                   >
                     {section.label}
                     {activeSection === section.id && (
@@ -250,8 +267,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   </motion.div>
                 </AnimatePresence>
                 <div className="absolute inset-0 flex items-center justify-between px-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => setActiveImageIndex(prev => (prev > 0 ? prev - 1 : product.images.length - 1))} className="p-2 bg-white/90 rounded-full shadow-lg"><ChevronLeft size={20} /></button>
-                  <button onClick={() => setActiveImageIndex(prev => (prev < product.images.length - 1 ? prev + 1 : 0))} className="p-2 bg-white/90 rounded-full shadow-lg"><ChevronRight size={20} /></button>
+                  <button onClick={() => setActiveImageIndex(prev => (prev > 0 ? prev - 1 : product.images.length - 1))} className="p-2 bg-white/90 rounded-full shadow-lg cursor-pointer"><ChevronLeft size={20} /></button>
+                  <button onClick={() => setActiveImageIndex(prev => (prev < product.images.length - 1 ? prev + 1 : 0))} className="p-2 bg-white/90 rounded-full shadow-lg cursor-pointer"><ChevronRight size={20} /></button>
                 </div>
               </div>
               <div className="flex gap-3 mt-6 overflow-x-auto pb-2 scrollbar-hide">
@@ -259,9 +276,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   <button
                     key={img.id}
                     onClick={() => setActiveImageIndex(idx)}
-                    className={`relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all ${
-                      activeImageIndex === idx ? 'border-[#326e51] scale-105 shadow-md' : 'border-transparent'
-                    }`}
+                    className={`relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all cursor-pointer ${activeImageIndex === idx ? 'border-[#326e51] scale-105 shadow-md' : 'border-transparent'
+                      }`}
                   >
                     <Image src={img.image_url} alt="" fill className="object-cover" />
                   </button>
@@ -281,7 +297,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   </div>
                 </div>
                 <h1 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">{product.name}</h1>
-                
+
                 <div className="flex items-center gap-6 border-y border-gray-50 py-4">
                   <div className="flex items-center gap-1">
                     <div className="flex gap-0.5">
@@ -295,13 +311,39 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   <span className="text-sm text-gray-500 font-medium">Đã bán {product.soldCount}+</span>
                 </div>
 
-                <div className="p-6 bg-gray-50 rounded-2xl space-y-3">
+                <div className="p-6 bg-gray-50 rounded-2xl space-y-4">
                   <div className="flex items-baseline gap-4">
-                    <span className="text-4xl font-black text-[#326e51]">{product.price.toLocaleString('vi-VN')}₫</span>
-                    <span className="text-lg text-gray-400 line-through">{product.originalPrice.toLocaleString('vi-VN')}₫</span>
-                    <span className="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded-lg">-{discount}%</span>
+                    <span className="text-4xl font-black text-[#326e51]">{currentPrice.toLocaleString('vi-VN')}₫</span>
+                    {currentOriginalPrice && (
+                      <>
+                        <span className="text-lg text-gray-400 line-through">{currentOriginalPrice.toLocaleString('vi-VN')}₫</span>
+                        <span className="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded-lg">-{discount}%</span>
+                      </>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 text-red-500 text-xs font-bold">
+                  
+                  {product.variants.length > 0 && (
+                    <div className="space-y-3 pt-2">
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Chọn dung tích:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {product.variants.map((v) => (
+                          <button
+                            key={v.id}
+                            onClick={() => setSelectedVariantId(v.id || null)}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer border-2 ${
+                              selectedVariant?.id === v.id
+                                ? 'bg-[#326e51] text-white border-[#326e51] shadow-md'
+                                : 'bg-white text-gray-600 border-gray-100 hover:border-[#326e51]'
+                            }`}
+                          >
+                            {v.volume}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 text-red-500 text-xs font-bold pt-2">
                     <Clock size={14} />
                     <span>Giá tốt nhất trong 30 ngày qua</span>
                   </div>
@@ -309,11 +351,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
                 {/* Actions */}
                 <div className="flex gap-3 h-14 pt-4">
-                  <button className="flex-[2] bg-[#326e51] text-white font-black rounded-2xl hover:bg-[#25543d] transition-all shadow-lg flex items-center justify-center gap-2">
+                  <button className="flex-[2] bg-[#326e51] text-white font-black rounded-2xl hover:bg-[#25543d] transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer">
                     <ShoppingCart />
                     THÊM VÀO GIỎ HÀNG
                   </button>
-                  <button onClick={() => setIsFavorite(!isFavorite)} className={`w-14 flex items-center justify-center rounded-2xl border transition-all ${isFavorite ? 'bg-red-50 border-red-200 text-red-500' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
+                  <button onClick={() => setIsFavorite(!isFavorite)} className={`w-14 flex items-center justify-center rounded-2xl border transition-all cursor-pointer ${isFavorite ? 'bg-red-50 border-red-200 text-red-500' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
                     <Heart fill={isFavorite ? 'currentColor' : 'none'} size={24} />
                   </button>
                 </div>
@@ -329,9 +371,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               <button
                 key={section.id}
                 onClick={() => scrollToSection(section.id)}
-                className={`text-sm font-bold whitespace-nowrap transition-colors relative ${
-                  activeSection === section.id ? 'text-[#326e51]' : 'text-gray-400 hover:text-gray-600'
-                }`}
+                className={`text-sm font-bold whitespace-nowrap transition-colors relative cursor-pointer ${activeSection === section.id ? 'text-[#326e51]' : 'text-gray-400 hover:text-gray-600'
+                  }`}
               >
                 {section.label}
                 {activeSection === section.id && (
@@ -343,8 +384,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         </div>
 
         {/* Sequential Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-9 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
+          <div className="lg:col-span-9 min-w-0 w-full space-y-8">
             {/* Description Section */}
             {product.description && (
               <section id="description" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
@@ -352,7 +393,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Thông tin sản phẩm</h3>
                 </div>
                 <div className="p-8">
-                  <div className="prose prose-slate max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5" dangerouslySetInnerHTML={{ __html: product.description }} />
+                  <div className="prose prose-sm prose-slate max-w-none w-full !whitespace-normal !break-normal !break-words prose-p:text-gray-600 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5" dangerouslySetInnerHTML={{ __html: product.description.replace(/&nbsp;|\u00A0/g, ' ') }} />
                 </div>
               </section>
             )}
@@ -368,7 +409,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     <Info size={24} className="text-blue-600 flex-shrink-0" />
                     <p className="text-xs text-blue-700 leading-relaxed font-medium">Bảng thành phần có thể thay đổi theo lô sản xuất. Vui lòng tham khảo bao bì thực tế.</p>
                   </div> */}
-                  <div className="prose prose-slate max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5" dangerouslySetInnerHTML={{ __html: product.ingredient_full_text }} />
+                  <div className="prose prose-sm prose-slate max-w-none w-full !whitespace-normal !break-normal !break-words prose-p:text-gray-600 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5" dangerouslySetInnerHTML={{ __html: product.ingredient_full_text?.replace(/&nbsp;|\u00A0/g, ' ') || '' }} />
                 </div>
               </section>
             )}
@@ -380,7 +421,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Hướng dẫn sử dụng</h3>
                 </div>
                 <div className="p-8">
-                  <div className="prose prose-slate max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5" dangerouslySetInnerHTML={{ __html: product.usage_instructions }} />
+                  <div className="prose prose-sm prose-slate max-w-none w-full !whitespace-normal !break-normal !break-words prose-p:text-gray-600 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5" dangerouslySetInnerHTML={{ __html: product.usage_instructions?.replace(/&nbsp;|\u00A0/g, ' ') || '' }} />
                 </div>
               </section>
             )}
@@ -424,7 +465,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </p>
                   </div>
                 ))}
-                <button className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl text-gray-400 text-sm font-bold hover:border-[#326e51] hover:text-[#326e51] transition-all">
+                <button className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl text-gray-400 text-sm font-bold hover:border-[#326e51] hover:text-[#326e51] transition-all cursor-pointer">
                   XEM THÊM ĐÁNH GIÁ
                 </button>
               </div>
@@ -452,6 +493,21 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       </main>
 
       <Footer />
+
+      {/* Scroll to Top Button */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-8 right-8 w-12 h-12 bg-[#326e51] text-white rounded-full shadow-2xl flex items-center justify-center cursor-pointer z-50 hover:bg-[#25543d] transition-all border-4 border-white/20 backdrop-blur-sm"
+          >
+            <ArrowUp size={24} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

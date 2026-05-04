@@ -71,7 +71,7 @@ export default function AdminProducts() {
     page,
     limit,
     ...(debouncedSearch && { search: debouncedSearch }),
-    ...(categoryId && { category_id: categoryId }),
+    ...(categoryId && { category_ids: categoryId.toString() }),
     ...(sortBy && { sortBy }),
     ...(sortBy && { sortOrder }),
     ...(debouncedMinPrice && { min_price: Number(debouncedMinPrice) }),
@@ -393,16 +393,40 @@ export default function AdminProducts() {
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              {product.categories ? (
-                                <span className="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-600">
-                                  {product.categories.name}
-                                </span>
-                              ) : (
-                                <span className="text-xs text-gray-400">—</span>
-                              )}
+                              <div className="flex flex-wrap gap-1.5">
+                                {product.categories && product.categories.length > 0 ? (
+                                  product.categories.map((cat: any) => (
+                                    <span key={cat.id} className="px-2.5 py-0.5 bg-gray-100 rounded-full text-[10px] font-bold text-gray-600 border border-gray-200">
+                                      {cat.name}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-xs text-gray-400">—</span>
+                                )}
+                              </div>
                             </td>
-                            <td className="px-6 py-4 font-bold text-gray-900 text-sm">
-                              {formatPrice(product.price)}
+                            <td className="px-6 py-4">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-gray-900 text-sm">
+                                  {product.variants && product.variants.length > 0 ? (
+                                    (() => {
+                                      const prices = product.variants.map(v => v.price);
+                                      const minPrice = Math.min(...prices);
+                                      const maxPrice = Math.max(...prices);
+                                      return minPrice === maxPrice 
+                                        ? formatPrice(minPrice) 
+                                        : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`;
+                                    })()
+                                  ) : (
+                                    formatPrice(product.price)
+                                  )}
+                                </span>
+                                {product.variants && product.variants.length > 0 && (
+                                  <span className="text-[10px] text-gray-400 font-medium">
+                                    {product.variants.length} variant{product.variants.length > 1 ? 's' : ''}
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex justify-center">

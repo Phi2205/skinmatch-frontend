@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect, useRef } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as zod from 'zod';
 import { 
@@ -13,15 +13,16 @@ import {
   Plus, 
   Trash2,
   Check,
-  FileImage
+  FileImage,
+  Search
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createProduct } from '../services/product.service';
-import { getAllCategories } from '@/modules/category/services/category.service';
-import { getAllBadges } from '@/modules/badges/services/badge.service';
-import { getAllConcerns } from '@/modules/concerns/services/concern.service';
-import { getAllIngredients } from '@/modules/ingredients/services/ingredient.service';
-import { getAllSkinTypes } from '@/modules/skin-types/services/skin-type.service';
+import { getAllCategories, createCategory } from '@/modules/category/services/category.service';
+import { getAllBadges, createBadge } from '@/modules/badges/services/badge.service';
+import { getAllConcerns, createConcern } from '@/modules/concerns/services/concern.service';
+import { getAllIngredients, createIngredient } from '@/modules/ingredients/services/ingredient.service';
+import { getAllSkinTypes, createSkinType } from '@/modules/skin-types/services/skin-type.service';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
@@ -31,8 +32,13 @@ const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 const productSchema = zod.object({
   name: zod.string().min(2, 'Name must be at least 2 characters'),
-  price: zod.preprocess((val) => Number(val), zod.number().min(0, 'Price must be at least 0')),
-  category_id: zod.preprocess((val) => val === '' ? undefined : Number(val), zod.number().optional()),
+  variants: zod.array(zod.object({
+    volume: zod.string().min(1, 'Volume is required'),
+    price: zod.preprocess((val) => Number(val), zod.number().min(0, 'Price must be at least 0')),
+    sku: zod.string().optional(),
+    stock: zod.preprocess((val) => Number(val), zod.number().min(0).default(0)),
+  })).min(1, 'At least one variant is required'),
+  category_ids: zod.array(zod.number()).default([]),
   summary: zod.string().optional(),
   description: zod.string().optional(),
   ingredient_full_text: zod.string().optional(),
@@ -60,6 +66,11 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Search & Quick Create states
+  const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
+  const [quickCreateField, setQuickCreateField] = useState<{ field: string, label: string } | null>(null);
+  const [isCreatingRelation, setIsCreatingRelation] = useState(false);
 
   const {
     register,
@@ -67,22 +78,30 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
     setValue,
     watch,
     reset,
+    control,
     formState: { errors }
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: '',
-      price: 0,
+      variants: [{ volume: '', price: 0, sku: '', stock: 0 }],
       is_featured: false,
       is_active: true,
       badge_ids: [],
+      category_ids: [],
       concern_ids: [],
-      ingredient_ids: [],
+      ingredient_ids: [], 
       skin_type_ids: [],
     }
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "variants",
+  });
+
   const watchBadgeIds = watch('badge_ids');
+  const watchCategoryIds = watch('category_ids');
   const watchConcernIds = watch('concern_ids');
   const watchIngredientIds = watch('ingredient_ids');
   const watchSkinTypeIds = watch('skin_type_ids');
@@ -160,8 +179,7 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
     
     // Basic fields
     formData.append('name', data.name);
-    formData.append('price', data.price.toString());
-    if (data.category_id) formData.append('category_id', data.category_id.toString());
+    formData.append('variants', JSON.stringify(data.variants));
     if (data.summary) formData.append('summary', data.summary);
     if (data.description) formData.append('description', data.description);
     if (data.ingredient_full_text) formData.append('ingredient_full_text', data.ingredient_full_text);
@@ -177,6 +195,7 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
     }
 
     // Relation arrays as JSON strings
+    formData.append('category_ids', JSON.stringify(data.category_ids));
     formData.append('badge_ids', JSON.stringify(data.badge_ids));
     formData.append('concern_ids', JSON.stringify(data.concern_ids));
     formData.append('ingredient_ids', JSON.stringify(data.ingredient_ids));
@@ -186,10 +205,26 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
   };
 
   const handleClose = () => {
-    reset();
+    reset({
+      name: '',
+      variants: [{ volume: '', price: 0, sku: '', stock: 0 }],
+      is_featured: false,
+      is_active: true,
+      badge_ids: [],
+      category_ids: [],
+      concern_ids: [],
+      ingredient_ids: [],
+      skin_type_ids: [],
+      summary: '',
+      description: '',
+      ingredient_full_text: '',
+      usage_instructions: '',
+      image_url: ''
+    });
     setActiveTab('basic');
     setImageMode('file');
     handleRemoveFile();
+    setSearchQueries({});
     onClose();
   };
 
@@ -199,6 +234,47 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
       setValue(field, currentIds.filter(i => i !== id) as any);
     } else {
       setValue(field, [...currentIds, id] as any);
+    }
+  };
+
+  const handleAddNewRelation = async (field: string, name: string) => {
+    if (!name.trim()) return;
+    setIsCreatingRelation(true);
+    try {
+      let response: any;
+      if (field === 'category_ids') response = await createCategory({ name });
+      else if (field === 'badge_ids') {
+        const formData = new FormData();
+        formData.append('name', name);
+        response = await createBadge(formData);
+      }
+      else if (field === 'concern_ids') response = await createConcern({ name });
+      else if (field === 'ingredient_ids') response = await createIngredient({ name });
+      else if (field === 'skin_type_ids') response = await createSkinType({ name });
+
+      if (response?.success) {
+        toast.success(`Created new item`);
+        const newItem = response.data;
+        
+        // Update local query cache immediately to show the new item
+        const queryKey = [field.replace('_ids', 's')];
+        queryClient.setQueryData(queryKey, (old: any) => {
+          if (!old) return old;
+          return { ...old, data: [...(old.data || []), newItem] };
+        });
+
+        // Select the new item
+        const currentIds = watch(field as any) as number[];
+        setValue(field as any, [...currentIds, newItem.id]);
+        
+        // Clear search
+        setSearchQueries(prev => ({ ...prev, [field]: '' }));
+        setQuickCreateField(null);
+      }
+    } catch (error) {
+      toast.error('Failed to create item');
+    } finally {
+      setIsCreatingRelation(false);
     }
   };
 
@@ -212,31 +288,76 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
     field: keyof ProductFormData, 
     options: any[], 
     selectedIds: number[] 
-  }) => (
-    <div className="space-y-2">
-      <label className="text-sm font-semibold text-gray-700">{label}</label>
-      <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-xl min-h-[46px]">
-        {options.map((opt) => {
-          const isSelected = selectedIds.includes(opt.id);
-          return (
+  }) => {
+    const query = searchQueries[field] || '';
+    const filteredOptions = options.filter(opt => 
+      opt.name.toLowerCase().includes(query.toLowerCase())
+    );
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-bold text-gray-700">{label}</label>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder={`Search ${label.toLowerCase()}...`}
+                value={query}
+                onChange={(e) => setSearchQueries(prev => ({ ...prev, [field]: e.target.value }))}
+                className="pl-8 pr-3 py-1.5 bg-gray-100 border-none rounded-lg text-xs focus:ring-1 focus:ring-[#7a9e8e] transition w-40"
+              />
+            </div>
             <button
-              key={opt.id}
               type="button"
-              onClick={() => toggleRelation(field, opt.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
-                isSelected 
-                  ? 'bg-[#7a9e8e] text-white border-[#7a9e8e] shadow-sm' 
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-[#7a9e8e] hover:text-[#7a9e8e]'
-              }`}
+              onClick={() => setQuickCreateField({ field, label })}
+              className="p-1.5 bg-[#7a9e8e]/10 text-[#7a9e8e] rounded-lg hover:bg-[#7a9e8e] hover:text-white transition cursor-pointer"
+              title={`Add new ${label.toLowerCase()}`}
             >
-              {isSelected && <Check size={12} className="inline mr-1" />}
-              {opt.name}
+              <Plus size={14} />
             </button>
-          );
-        })}
+          </div>
+        </div>
+        
+        <div className="flex flex-wrap gap-2 p-3 bg-white border border-gray-100 rounded-2xl min-h-[50px] max-h-40 overflow-y-auto shadow-inner">
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((opt) => {
+              const isSelected = selectedIds.includes(opt.id);
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => toggleRelation(field, opt.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                    isSelected 
+                      ? 'bg-[#7a9e8e] text-white border-[#7a9e8e] shadow-md shadow-[#7a9e8e]/20' 
+                      : 'bg-gray-50 text-gray-600 border-transparent hover:border-[#7a9e8e] hover:bg-white'
+                  }`}
+                >
+                  {isSelected && <Check size={12} className="inline mr-1" />}
+                  {opt.name}
+                </button>
+              );
+            })
+          ) : (
+            <div className="w-full py-2 text-center">
+              <p className="text-[10px] text-gray-400 italic">No {label.toLowerCase()} found</p>
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => handleAddNewRelation(field, query)}
+                  className="mt-2 text-[10px] text-[#7a9e8e] font-bold hover:underline cursor-pointer"
+                >
+                  Create "{query}"?
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <AnimatePresence>
@@ -322,32 +443,78 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
                           />
                           {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">Price (VND)</label>
-                          <input
-                            type="number"
-                            {...register('price')}
-                            placeholder="0"
-                            className={`w-full px-4 py-3 bg-white border rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 transition ${
-                              errors.price ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#7a9e8e]'
-                            }`}
-                          />
-                          {errors.price && <p className="text-xs text-red-500 mt-1">{errors.price.message}</p>}
+                      </div>
+
+                      <div className="p-6 bg-white border border-gray-100 rounded-3xl shadow-sm space-y-4">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-bold text-gray-900">Product Variants (Volume & Price)</label>
+                          <button
+                            type="button"
+                            onClick={() => append({ volume: '', price: 0, sku: '', stock: 0 })}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-[#7a9e8e]/10 text-[#7a9e8e] rounded-xl hover:bg-[#7a9e8e] hover:text-white transition text-xs font-bold cursor-pointer"
+                          >
+                            <Plus size={14} />
+                            Add Variant
+                          </button>
+                        </div>
+
+                        <div className="space-y-4">
+                          {fields.map((field, index) => (
+                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-2xl relative group">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase">Volume/Size</label>
+                                <input
+                                  {...register(`variants.${index}.volume` as const)}
+                                  placeholder="e.g. 50ml"
+                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#7a9e8e] transition text-sm"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase">Price (VND)</label>
+                                <input
+                                  type="number"
+                                  {...register(`variants.${index}.price` as const)}
+                                  placeholder="0"
+                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#7a9e8e] transition text-sm"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase">SKU</label>
+                                <input
+                                  {...register(`variants.${index}.sku` as const)}
+                                  placeholder="SKU..."
+                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#7a9e8e] transition text-sm"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase">Stock</label>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="number"
+                                    {...register(`variants.${index}.stock` as const)}
+                                    placeholder="0"
+                                    className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#7a9e8e] transition text-sm"
+                                  />
+                                  {fields.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => remove(index)}
+                                      className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {errors.variants && (
+                            <p className="text-xs text-red-500">{errors.variants.message}</p>
+                          )}
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-700">Category</label>
-                        <select
-                          {...register('category_id')}
-                          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 focus:border-[#7a9e8e] transition cursor-pointer appearance-none"
-                        >
-                          <option value="">Select Category</option>
-                          {categories.map((cat: any) => (
-                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                          ))}
-                        </select>
-                      </div>
+                      <MultiSelectField label="Categories" field="category_ids" options={categories} selectedIds={watchCategoryIds} />
 
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700">Summary</label>
@@ -596,8 +763,85 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
               </div>
             </div>
           </motion.div>
+
+          <QuickCreateModal
+            isOpen={!!quickCreateField}
+            onClose={() => setQuickCreateField(null)}
+            onConfirm={(name) => quickCreateField && handleAddNewRelation(quickCreateField.field, name)}
+            label={quickCreateField?.label || ''}
+            isPending={isCreatingRelation}
+            initialValue={quickCreateField ? searchQueries[quickCreateField.field] : ''}
+          />
         </div>
       )}
     </AnimatePresence>
+  );
+}
+
+// Quick Create Modal Component
+function QuickCreateModal({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  label, 
+  isPending,
+  initialValue = ''
+}: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  onConfirm: (name: string) => void, 
+  label: string, 
+  isPending: boolean,
+  initialValue?: string
+}) {
+  const [name, setName] = useState(initialValue);
+
+  useEffect(() => {
+    if (isOpen) setName(initialValue);
+  }, [isOpen, initialValue]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl"
+      >
+        <h3 className="text-xl font-bold text-gray-900 mb-4">Add New {label}</h3>
+        <div className="space-y-4">
+          <input
+            autoFocus
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={`Enter ${label.toLowerCase()} name...`}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#7a9e8e] transition"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && name.trim()) onConfirm(name);
+              if (e.key === 'Escape') onClose();
+            }}
+          />
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 text-gray-500 font-bold hover:bg-gray-50 rounded-xl transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={!name.trim() || isPending}
+              onClick={() => onConfirm(name)}
+              className="flex-[2] px-4 py-2.5 bg-[#7a9e8e] text-white font-bold rounded-xl hover:bg-[#5a7a6b] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              {isPending ? <Loader2 size={18} className="animate-spin" /> : 'Create'}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 }

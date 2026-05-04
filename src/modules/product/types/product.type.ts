@@ -1,7 +1,16 @@
+export interface ProductVariant {
+  id?: number;
+  volume: string;
+  price: number;
+  sku?: string;
+  stock?: number;
+}
+
 export interface Product {
   id: number;
   name: string;
   price: number;
+  variants: ProductVariant[];
   category_id: number | null;
   description: string | null;
   ingredient_full_text: string | null;
@@ -16,7 +25,7 @@ export interface Product {
     name: string;
     slug: string;
     is_active: boolean;
-  } | null;
+  }[];
   product_images: {
     id: number;
     image_url: string;
@@ -58,7 +67,7 @@ export interface ProductQueryParams {
   page?: number;
   limit?: number;
   search?: string;
-  category_id?: number;
+  category_ids?: string;
   concern_ids?: string;
   skin_type_ids?: string;
   badge_ids?: string;

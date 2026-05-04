@@ -9,7 +9,7 @@ export const getProducts = async (params: ProductQueryParams = {}): Promise<Pagi
         if (params.page) queryParams.append('page', params.page.toString());
         if (params.limit) queryParams.append('limit', params.limit.toString());
         if (params.search) queryParams.append('search', params.search);
-        if (params.category_id) queryParams.append('category_id', params.category_id.toString());
+        if (params.category_ids) queryParams.append('category_ids', params.category_ids);
         if (params.concern_ids) queryParams.append('concern_ids', params.concern_ids);
         if (params.skin_type_ids) queryParams.append('skin_type_ids', params.skin_type_ids);
         if (params.badge_ids) queryParams.append('badge_ids', params.badge_ids);
