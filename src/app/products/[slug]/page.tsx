@@ -17,7 +17,9 @@ import {
   ChevronRight,
   Info,
   ChevronLeft,
-  ArrowUp
+  ArrowUp,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -76,6 +78,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState('description');
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const { data: productResponse, isLoading, error } = useQuery({
     queryKey: ['product', slug],
@@ -138,6 +141,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       });
     }
   };
+  useEffect(() => {
+    if (apiProduct?.variants && apiProduct.variants.length > 0 && !selectedVariantId) {
+      setSelectedVariantId(apiProduct.variants[0].id || null);
+    }
+  }, [apiProduct, selectedVariantId]);
 
   if (isLoading) {
     return <ProductSkeleton />;
@@ -169,11 +177,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const currentOriginalPrice = product.originalPrice; // or variant specific if available
   const discount = currentOriginalPrice ? Math.round(((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100) : 0;
 
-  useEffect(() => {
-    if (product.variants.length > 0 && !selectedVariantId) {
-      setSelectedVariantId(product.variants[0].id || null);
-    }
-  }, [product.variants, selectedVariantId]);
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] font-sans">
@@ -392,8 +395,36 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 <div className="p-6 border-b border-gray-50 bg-gray-50/30">
                   <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Thông tin sản phẩm</h3>
                 </div>
-                <div className="p-8">
-                  <div className="prose prose-sm prose-slate max-w-none w-full !whitespace-normal !break-normal !break-words prose-p:text-gray-600 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5" dangerouslySetInnerHTML={{ __html: product.description.replace(/&nbsp;|\u00A0/g, ' ') }} />
+                <div className="relative">
+                  <div 
+                    className={`transition-all duration-500 overflow-hidden ${!isDescriptionExpanded ? 'max-h-[400px]' : 'max-h-none'}`}
+                  >
+                    <div className="p-8">
+                      <div className="prose prose-sm prose-slate max-w-none w-full !whitespace-normal !break-normal !break-words prose-p:text-gray-600 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5" dangerouslySetInnerHTML={{ __html: product.description.replace(/&nbsp;|\u00A0/g, ' ') }} />
+                    </div>
+                  </div>
+                  
+                  {!isDescriptionExpanded && (
+                    <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+                  )}
+                  
+                  <div className={`p-6 flex justify-center ${isDescriptionExpanded ? 'border-t border-gray-50' : ''}`}>
+                    <button 
+                      onClick={() => {
+                        if (isDescriptionExpanded) {
+                          scrollToSection('description');
+                        }
+                        setIsDescriptionExpanded(!isDescriptionExpanded);
+                      }}
+                      className="flex items-center gap-2 text-[#326e51] font-black text-sm hover:opacity-80 transition-all cursor-pointer bg-white px-6 py-2 rounded-full border border-gray-100 shadow-sm"
+                    >
+                      {isDescriptionExpanded ? (
+                        <>THU GỌN NỘI DUNG <ChevronUp size={18} /></>
+                      ) : (
+                        <>XEM THÊM NỘI DUNG <ChevronDown size={18} /></>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </section>
             )}
