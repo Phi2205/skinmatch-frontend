@@ -1,11 +1,26 @@
+'use client';
+
 import { Header } from '@/shared/components/header';
 import { Footer } from '@/shared/components/footer';
 import { Hero } from '@/shared/components/hero';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Leaf, Shield, Recycle } from 'lucide-react';
+import { Leaf, Shield, Recycle, ShoppingBag } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { getProductsByBadgeSlug } from '@/modules/product/services/product.service';
 
 export default function Home() {
+  const { data: bestSellersResponse, isLoading } = useQuery({
+    queryKey: ['products', 'best-seller'],
+    queryFn: () => getProductsByBadgeSlug('best-seller', 1, 4),
+  });
+
+  const bestSellers = bestSellersResponse?.data?.items || [];
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -64,129 +79,66 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Product Card 1 */}
-            <Link href="/products/hydrating-essence-toner" className="group">
-              <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition duration-300">
-                <div className="relative h-64 bg-gray-200 overflow-hidden">
-                  <Image
-                    src="https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400&h=500&fit=crop"
-                    alt="Hydrating Essence Toner"
-                    fill
-                    className="object-cover group-hover:scale-105 transition duration-300"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-[#7a9e8e] transition">
-                    Hydrating Essence Toner
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Lightweight hydrating toner with hyaluronic acid
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-bold text-gray-900">$32</span>
-                      <span className="text-sm text-gray-500 line-through">$42</span>
+            {isLoading ? (
+              // Loading Skeletons
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-lg overflow-hidden shadow-sm animate-pulse">
+                  <div className="aspect-square bg-gray-200" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                    <div className="h-3 bg-gray-200 rounded w-full" />
+                    <div className="flex justify-between items-center pt-2">
+                      <div className="h-5 bg-gray-200 rounded w-1/4" />
+                      <div className="h-8 bg-gray-200 rounded w-1/4" />
                     </div>
-                    <button className="px-3 py-2 bg-[#7a9e8e] text-white text-xs font-semibold rounded hover:bg-[#5a7a6b] transition">
-                      Add
-                    </button>
                   </div>
                 </div>
+              ))
+            ) : bestSellers.length === 0 ? (
+              <div className="col-span-full py-12 text-center text-gray-500">
+                <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                <p>No best-selling products found at the moment.</p>
               </div>
-            </Link>
-
-            {/* Product Card 2 */}
-            <Link href="/products/vitamin-c-brightening-serum" className="group">
-              <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition duration-300">
-                <div className="relative h-64 bg-gray-200 overflow-hidden">
-                  <Image
-                    src="https://images.unsplash.com/photo-1599496257149-076fab403c4d?w=400&h=500&fit=crop"
-                    alt="Vitamin C Serum"
-                    fill
-                    className="object-cover group-hover:scale-105 transition duration-300"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-[#7a9e8e] transition">
-                    Vitamin C Brightening Serum
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Stabilized vitamin C for brightening
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-bold text-gray-900">$45</span>
-                      <span className="text-sm text-gray-500 line-through">$60</span>
+            ) : (
+              bestSellers.map((product) => (
+                <Link key={product.id} href={`/products/${product.slug}`} className="group">
+                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition duration-300">
+                    <div className="relative aspect-square bg-gray-100 overflow-hidden">
+                      {product.image_url ? (
+                        <Image
+                          src={product.image_url}
+                          alt={product.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition duration-300"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-gray-300">
+                          <ShoppingBag size={48} />
+                        </div>
+                      )}
                     </div>
-                    <button className="px-3 py-2 bg-[#7a9e8e] text-white text-xs font-semibold rounded hover:bg-[#5a7a6b] transition">
-                      Add
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Product Card 3 */}
-            <Link href="/products/retinol-night-cream" className="group">
-              <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition duration-300">
-                <div className="relative h-64 bg-gray-200 overflow-hidden">
-                  <Image
-                    src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400&h=500&fit=crop"
-                    alt="Retinol Night Cream"
-                    fill
-                    className="object-cover group-hover:scale-105 transition duration-300"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-[#7a9e8e] transition">
-                    Retinol Night Cream
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Advanced retinol for anti-aging
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-bold text-gray-900">$52</span>
-                      <span className="text-sm text-gray-500 line-through">$70</span>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-[#7a9e8e] transition line-clamp-1">
+                        {product.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2 min-h-[40px]">
+                        {product.summary || 'No summary available'}
+                      </p>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-lg font-bold text-[#7a9e8e]">
+                            {formatPrice(product.price)}
+                          </span>
+                        </div>
+                        <button className="px-3 py-2 bg-[#7a9e8e] text-white text-xs font-semibold rounded hover:bg-[#5a7a6b] transition">
+                          Add
+                        </button>
+                      </div>
                     </div>
-                    <button className="px-3 py-2 bg-[#7a9e8e] text-white text-xs font-semibold rounded hover:bg-[#5a7a6b] transition">
-                      Add
-                    </button>
                   </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Product Card 4 */}
-            <Link href="/products/daily-hydrating-moisturizer" className="group">
-              <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition duration-300">
-                <div className="relative h-64 bg-gray-200 overflow-hidden">
-                  <Image
-                    src="https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400&h=500&fit=crop"
-                    alt="Daily Hydrating Moisturizer"
-                    fill
-                    className="object-cover group-hover:scale-105 transition duration-300"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-[#7a9e8e] transition">
-                    Daily Hydrating Moisturizer
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Lightweight moisturizer for daily use
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-bold text-gray-900">$35</span>
-                      <span className="text-sm text-gray-500 line-through">$45</span>
-                    </div>
-                    <button className="px-3 py-2 bg-[#7a9e8e] text-white text-xs font-semibold rounded hover:bg-[#5a7a6b] transition">
-                      Add
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </Link>
+                </Link>
+              ))
+            )}
           </div>
 
           <div className="text-center mt-12">
@@ -204,4 +156,5 @@ export default function Home() {
     </div>
   );
 }
+
 

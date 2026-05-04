@@ -3,7 +3,7 @@ import { refresh } from '../modules/auth/services/auth.service';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL;
 // Tạo instance của axios
-const axiosInstance = axios.create({
+export const axiosInstance = axios.create({
     baseURL: baseURL, // Lấy base URL từ biến môi trường
     withCredentials: true, // Cho phép gửi và nhận cookies (cần thiết cho JWT token trong cookie)
     headers: {

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@plugin "@tailwindcss/typography";
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
@@ -75,7 +76,7 @@
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
+  --font-sans: 'Inter', sans-serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -119,6 +120,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -128,18 +130,58 @@
   .animate-spin-slow {
     animation: spin-slow 8s linear infinite;
   }
+
   .animate-pulse-slow {
     animation: pulse-slow 4s ease-in-out infinite;
   }
 }
 
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes pulse-slow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
 }
 
+/* Quill Editor Customization */
+.quill-editor .ql-toolbar.ql-snow {
+  border: none;
+  border-bottom: 1px solid #f1f1f1;
+  background: #fdfdfd;
+  padding: 12px;
+}
+
+.quill-editor .ql-container.ql-snow {
+  border: none;
+  min-height: 150px;
+  font-family: inherit;
+}
+
+.quill-editor .ql-editor {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #374151;
+  min-height: 150px;
+}
+
+.quill-editor .ql-editor.ql-blank::before {
+  color: #9ca3af;
+  font-style: normal;
+}

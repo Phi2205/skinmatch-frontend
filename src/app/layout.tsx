@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Inter, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/modules/cart/hooks/useCart'
+import { AuthProvider } from '@/contexts/authContext'
+import QueryProvider from '@/shared/providers/query-provider'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -37,11 +39,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="bg-background" suppressHydrationWarning>
-      <body className="font-sans antialiased bg-background">
-        <CartProvider>
-          {children}
-          {process.env.NODE_ENV === 'production' && <Analytics />}
-        </CartProvider>
+      <body className={`${inter.variable} font-sans antialiased bg-background`}>
+        <QueryProvider>
+          <AuthProvider>
+            <CartProvider>
+              {children}
+              {process.env.NODE_ENV === 'production' && <Analytics />}
+            </CartProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   )

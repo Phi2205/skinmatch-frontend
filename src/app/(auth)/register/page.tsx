@@ -6,9 +6,11 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Mail, Lock, Check, X } from 'lucide-react';
+import { useAuth } from '@/contexts/authContext';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,34 +45,17 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, confirmPassword, name }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'Registration failed');
-        setLoading(false);
-        return;
-      }
-
-      // Store user in localStorage
-      localStorage.setItem('user', JSON.stringify(data.user));
-
-      // Redirect to skin profile setup
-      router.push('/onboarding/skin-profile');
+      await register(email, password, name);
+      // Redirection is handled within authContext
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      setError(err.response?.data?.message || err.message || 'An error occurred');
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header />
+      {/* <Header /> */}
 
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
