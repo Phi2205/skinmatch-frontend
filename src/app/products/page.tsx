@@ -8,7 +8,7 @@ import { useState, useMemo } from 'react';
 import { Search, ChevronDown, Plus, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getProducts } from '@/modules/product/services/product.service';
-import { ProductSkeleton } from '@/modules/product/components/product-skeleton';
+import { ProductCardSkeleton } from '@/modules/product/components/product-skeleton';
 import { getAllCategories } from '@/modules/category/services/category.service';
 import { getAllConcerns } from '@/modules/concerns/services/concern.service';
 import { getAllSkinTypes } from '@/modules/skin-types/services/skin-type.service';
@@ -300,8 +300,8 @@ export default function ProductsPage() {
             {/* Products */}
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <ProductSkeleton key={i} />
+                {[...Array(8)].map((_, i) => (
+                  <ProductCardSkeleton key={i} />
                 ))}
               </div>
             ) : filteredProducts.length > 0 ? (

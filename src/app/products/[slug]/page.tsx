@@ -19,7 +19,9 @@ import {
   ChevronLeft,
   ArrowUp,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Minus,
+  Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -27,6 +29,7 @@ import { getProductBySlug } from '@/modules/product/services/product.service';
 import { ProductSkeleton } from '@/modules/product/components/product-skeleton';
 import { useCart } from '@/modules/cart/hooks/useCart';
 import { toast } from 'sonner';
+import { CheckoutModal } from '@/modules/orders/components/checkout-modal';
 
 // Extended Mock Data to match Hasaki details
 const MOCK_PRODUCT = {
@@ -83,6 +86,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   const { data: productResponse, isLoading, error } = useQuery({
     queryKey: ['product', slug],
@@ -229,14 +233,22 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </div>
                   </div>
                 </div>
-                <button 
-                  onClick={handleAddToCart}
-                  className="px-6 py-2.5 bg-[#ff6f00] text-white text-xs font-black rounded-xl hover:bg-[#e66400] transition-colors flex items-center gap-2 cursor-pointer"
-                >
-                  <ShoppingCart size={16} />
-                  THÊM VÀO GIỎ HÀNG
-                </button>
-              </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={handleAddToCart}
+                      className="px-4 py-2.5 bg-white border-2 border-[#326e51] text-[#326e51] text-[10px] font-black rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-2 cursor-pointer"
+                    >
+                      <ShoppingCart size={14} />
+                      THÊM GIỎ HÀNG
+                    </button>
+                    <button 
+                      onClick={() => setIsCheckoutOpen(true)}
+                      className="px-6 py-2.5 bg-[#326e51] text-white text-[10px] font-black rounded-xl hover:bg-[#25543d] transition-colors flex items-center gap-2 cursor-pointer"
+                    >
+                      MUA NGAY
+                    </button>
+                  </div>
+                </div>
 
               {/* Navigation Tabs (Sticky) */}
               <div className="flex gap-8 overflow-x-auto scrollbar-hide py-3">
@@ -400,17 +412,40 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   </div>
                 </div>
 
+                {/* Quantity Selector */}
+                <div className="flex items-center gap-4 pt-4">
+                  <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Số lượng</p>
+                  <div className="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                    <button 
+                      onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                      className="p-3 hover:bg-gray-50 transition-colors text-gray-500 cursor-pointer active:scale-95"
+                    >
+                      <Minus size={16} />
+                    </button>
+                    <span className="w-12 text-center font-black text-gray-900">{quantity}</span>
+                    <button 
+                      onClick={() => setQuantity(q => q + 1)}
+                      className="p-3 hover:bg-gray-50 transition-colors text-gray-500 cursor-pointer active:scale-95"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                </div>
+
                 {/* Actions */}
-                <div className="flex gap-3 h-14 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 h-auto sm:h-14 pt-4">
                   <button 
                     onClick={handleAddToCart}
-                    className="flex-[2] bg-[#326e51] text-white font-black rounded-2xl hover:bg-[#25543d] transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                    className="flex-1 border-2 border-[#326e51] text-[#326e51] font-black rounded-2xl hover:bg-gray-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <ShoppingCart />
-                    THÊM VÀO GIỎ HÀNG
+                    THÊM GIỎ HÀNG
                   </button>
-                  <button onClick={() => setIsFavorite(!isFavorite)} className={`w-14 flex items-center justify-center rounded-2xl border transition-all cursor-pointer ${isFavorite ? 'bg-red-50 border-red-200 text-red-500' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
-                    <Heart fill={isFavorite ? 'currentColor' : 'none'} size={24} />
+                  <button 
+                    onClick={() => setIsCheckoutOpen(true)}
+                    className="flex-1 bg-[#326e51] text-white font-black rounded-2xl hover:bg-[#25543d] transition-all shadow-lg shadow-[#326e51]/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  >
+                    MUA NGAY
                   </button>
                 </div>
               </div>
@@ -575,6 +610,15 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       </main>
 
       <Footer />
+
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        product={apiProduct}
+        variantId={selectedVariantId}
+        quantity={quantity}
+        totalPrice={currentPrice * quantity}
+      />
 
       {/* Scroll to Top Button */}
       <AnimatePresence>

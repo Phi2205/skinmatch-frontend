@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as zod from 'zod';
 import { 
@@ -172,19 +172,19 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
           ? productDetail.variants.map(v => ({
               id: v.id,
               price: v.price,
-              sku: v.sku,
-              stock: v.stock,
+              sku: v.sku || '',
+              stock: v.stock || 0,
               attributes: v.attributes?.length 
                 ? v.attributes.map(a => ({ id: a.id, name: a.name, value: a.value }))
                 : [{ name: 'volume', value: '' }]
             }))
           : [{ price: 0, sku: '', stock: 0, attributes: [{ name: 'volume', value: '' }] }],
         category_ids: productDetail.categories?.map(c => c.id) || [],
-        summary: productDetail.summary,
-        description: productDetail.description,
-        ingredient_full_text: productDetail.ingredient_full_text,
-        usage_instructions: productDetail.usage_instructions,
-        image_url: productDetail.image_url,
+        summary: productDetail.summary || '',
+        description: productDetail.description || '',
+        ingredient_full_text: productDetail.ingredient_full_text || '',
+        usage_instructions: productDetail.usage_instructions || '',
+        image_url: productDetail.image_url || '',
         is_featured: productDetail.is_featured,
         is_active: productDetail.is_active,
         badge_ids: productDetail.badges?.map(b => b.id) || [],
@@ -628,11 +628,17 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700">Full Description</label>
                         <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:border-[#7a9e8e] transition">
-                          <ReactQuill 
-                            theme="snow"
-                            value={watch('description') || ''}
-                            onChange={(content) => setValue('description', content)}
-                            className="quill-editor"
+                          <Controller
+                            name="description"
+                            control={control}
+                            render={({ field }) => (
+                              <ReactQuill 
+                                theme="snow"
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                className="quill-editor"
+                              />
+                            )}
                           />
                         </div>
                       </div>
@@ -640,11 +646,17 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700">Ingredients (Full Text)</label>
                         <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:border-[#7a9e8e] transition">
-                          <ReactQuill 
-                            theme="snow"
-                            value={watch('ingredient_full_text') || ''}
-                            onChange={(content) => setValue('ingredient_full_text', content)}
-                            className="quill-editor"
+                          <Controller
+                            name="ingredient_full_text"
+                            control={control}
+                            render={({ field }) => (
+                              <ReactQuill 
+                                theme="snow"
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                className="quill-editor"
+                              />
+                            )}
                           />
                         </div>
                       </div>
@@ -652,11 +664,17 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700">Usage Instructions</label>
                         <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:border-[#7a9e8e] transition">
-                          <ReactQuill 
-                            theme="snow"
-                            value={watch('usage_instructions') || ''}
-                            onChange={(content) => setValue('usage_instructions', content)}
-                            className="quill-editor"
+                          <Controller
+                            name="usage_instructions"
+                            control={control}
+                            render={({ field }) => (
+                              <ReactQuill 
+                                theme="snow"
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                className="quill-editor"
+                              />
+                            )}
                           />
                         </div>
                       </div>

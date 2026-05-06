@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as zod from 'zod';
 import { 
@@ -596,11 +596,17 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700">Full Description</label>
                         <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:border-[#7a9e8e] transition">
-                          <ReactQuill 
-                            theme="snow"
-                            value={watch('description') || ''}
-                            onChange={(content) => setValue('description', content)}
-                            className="quill-editor"
+                          <Controller
+                            name="description"
+                            control={control}
+                            render={({ field }) => (
+                              <ReactQuill 
+                                theme="snow"
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                className="quill-editor"
+                              />
+                            )}
                           />
                         </div>
                       </div>
@@ -608,11 +614,17 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700">Ingredients (Full Text)</label>
                         <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:border-[#7a9e8e] transition">
-                          <ReactQuill 
-                            theme="snow"
-                            value={watch('ingredient_full_text') || ''}
-                            onChange={(content) => setValue('ingredient_full_text', content)}
-                            className="quill-editor"
+                          <Controller
+                            name="ingredient_full_text"
+                            control={control}
+                            render={({ field }) => (
+                              <ReactQuill 
+                                theme="snow"
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                className="quill-editor"
+                              />
+                            )}
                           />
                         </div>
                       </div>
@@ -620,11 +632,17 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700">Usage Instructions</label>
                         <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:border-[#7a9e8e] transition">
-                          <ReactQuill 
-                            theme="snow"
-                            value={watch('usage_instructions') || ''}
-                            onChange={(content) => setValue('usage_instructions', content)}
-                            className="quill-editor"
+                          <Controller
+                            name="usage_instructions"
+                            control={control}
+                            render={({ field }) => (
+                              <ReactQuill 
+                                theme="snow"
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                className="quill-editor"
+                              />
+                            )}
                           />
                         </div>
                       </div>
