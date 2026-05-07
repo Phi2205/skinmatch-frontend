@@ -14,7 +14,7 @@ import { getAllConcerns, deleteConcern } from '@/modules/concerns/services/conce
 import { CreateConcernModal } from '@/modules/concerns/components/create-concern-modal';
 import { UpdateConcernModal } from '@/modules/concerns/components/update-concern-modal';
 import { Concern } from '@/modules/concerns/types/concern.type';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 
 const removeAccents = (str: string) => {
   return str
@@ -195,7 +195,7 @@ export default function AdminConcerns() {
         onClose={() => setEditingConcern(null)}
       />
       
-      <Toaster richColors position="top-right" />
+
     </div>
   );
 }

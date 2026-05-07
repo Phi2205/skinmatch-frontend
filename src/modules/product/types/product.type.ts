@@ -1,14 +1,21 @@
+export interface VariantAttribute {
+  id?: number;
+  name: string;
+  value: string;
+}
+
 export interface ProductVariant {
   id?: number;
-  volume: string;
   price: number;
   sku?: string;
   stock?: number;
+  attributes: VariantAttribute[];
 }
 
 export interface Product {
   id: number;
   name: string;
+  slug: string;
   price: number;
   variants: ProductVariant[];
   category_id: number | null;

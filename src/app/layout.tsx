@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/modules/cart/hooks/useCart'
 import { AuthProvider } from '@/contexts/authContext'
 import QueryProvider from '@/shared/providers/query-provider'
+import { Toaster } from 'sonner'
 import './globals.css'
 
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
@@ -44,6 +45,7 @@ export default function RootLayout({
           <AuthProvider>
             <CartProvider>
               {children}
+              <Toaster position="top-right" richColors />
               {process.env.NODE_ENV === 'production' && <Analytics />}
             </CartProvider>
           </AuthProvider>

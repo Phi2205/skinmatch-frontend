@@ -59,3 +59,36 @@ export function ProductSkeleton() {
     </div>
   );
 }
+
+export function ProductCardSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 p-5 flex flex-col h-full space-y-4">
+      {/* Image Skeleton */}
+      <div className="relative aspect-square bg-gray-50 rounded-xl animate-pulse flex items-center justify-center">
+        <div className="w-12 h-12 bg-gray-100/50 rounded-full" />
+      </div>
+
+      {/* Content Skeleton */}
+      <div className="flex-1 flex flex-col space-y-3">
+        <div className="flex items-center justify-between">
+          {/* Category Tag */}
+          <div className="h-5 w-16 bg-gray-100 rounded-md animate-pulse" />
+          {/* Star Rating */}
+          <div className="h-4 w-8 bg-gray-100 rounded animate-pulse" />
+        </div>
+
+        {/* Title */}
+        <div className="space-y-2 flex-1">
+          <div className="h-4 w-full bg-gray-100 rounded animate-pulse" />
+          <div className="h-4 w-5/6 bg-gray-100 rounded animate-pulse" />
+        </div>
+
+        {/* Price & Button */}
+        <div className="pt-4 border-t border-gray-50 flex justify-between items-center">
+          <div className="h-6 w-24 bg-gray-100 rounded animate-pulse" />
+          <div className="w-10 h-10 bg-gray-100 rounded-full animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
+}

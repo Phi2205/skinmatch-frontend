@@ -14,7 +14,7 @@ import { getAllBadges, deleteBadge } from '@/modules/badges/services/badge.servi
 import { CreateBadgeModal } from '@/modules/badges/components/create-badge-modal';
 import { UpdateBadgeModal } from '@/modules/badges/components/update-badge-modal';
 import { Badge } from '@/modules/badges/types/badge.type';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 
 export default function AdminBadges() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -193,7 +193,7 @@ export default function AdminBadges() {
         onClose={() => setEditingBadge(null)}
       />
       
-      <Toaster richColors position="top-right" />
+
     </div>
   );
 }
