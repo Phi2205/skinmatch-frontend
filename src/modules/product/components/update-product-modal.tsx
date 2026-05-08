@@ -278,11 +278,14 @@ export function UpdateProductModal({ isOpen, onClose, product }: UpdateProductMo
     
     // Basic fields
     formData.append('name', data.name);
-    // Strip IDs before sending to backend because it recreates variants
-    // Strip IDs from variants and attributes before sending to backend because it recreates variants
+    // Keep IDs of variants and attributes if they exist so the backend can update/create/delete variants appropriately
     formData.append('variants', JSON.stringify(data.variants.map(({ id, attributes, ...v }) => ({
+      ...(id ? { id } : {}),
       ...v,
-      attributes: attributes.map(({ id: attrId, ...attr }) => attr)
+      attributes: attributes.map(({ id: attrId, ...attr }) => ({
+        ...(attrId ? { id: attrId } : {}),
+        ...attr
+      }))
     }))));
     if (data.summary) formData.append('summary', data.summary);
     if (data.description) formData.append('description', data.description);
