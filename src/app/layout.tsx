@@ -5,6 +5,7 @@ import { CartProvider } from '@/modules/cart/hooks/useCart'
 import { AuthProvider } from '@/contexts/authContext'
 import QueryProvider from '@/shared/providers/query-provider'
 import { Toaster } from 'sonner'
+import { ChatbotWidget } from '@/modules/chatbot/components/chatbot-widget'
 import './globals.css'
 
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
@@ -45,6 +46,7 @@ export default function RootLayout({
           <AuthProvider>
             <CartProvider>
               {children}
+              <ChatbotWidget />
               <Toaster position="top-right" richColors />
               {process.env.NODE_ENV === 'production' && <Analytics />}
             </CartProvider>
