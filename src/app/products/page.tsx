@@ -4,7 +4,7 @@ import { Header } from '@/shared/components/header';
 import { Footer } from '@/shared/components/footer';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, ChevronDown, Plus, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getProducts } from '@/modules/product/services/product.service';
@@ -47,9 +47,22 @@ export default function ProductsPage() {
   const concerns = concernsResponse?.data || [];
   const skinTypes = skinTypesResponse?.data || [];
 
-  const { data: productsResponse, isLoading, error } = useQuery({
-    queryKey: ['products', searchTerm, selectedCategory, selectedSkinTypes, selectedConcerns, priceRange, sortBy],
+  const [page, setPage] = useState(1);
+  const [accumulatedProducts, setAccumulatedProducts] = useState<any[]>([]);
+  const [prevResponse, setPrevResponse] = useState<any>(null);
+
+  // Reset page when any filter parameters change
+  useEffect(() => {
+    setPage(1);
+    setAccumulatedProducts([]);
+    setPrevResponse(null);
+  }, [searchTerm, selectedCategory, selectedSkinTypes, selectedConcerns, priceRange, sortBy]);
+
+  const { data: productsResponse, isLoading, isFetching, error } = useQuery({
+    queryKey: ['products', searchTerm, selectedCategory, selectedSkinTypes, selectedConcerns, priceRange, sortBy, page],
     queryFn: () => getProducts({
+      page,
+      limit: 8, // Set limit to 8 for neat grid pages
       search: searchTerm,
       category_ids: selectedCategory === 'All' ? undefined : selectedCategory.toString(),
       skin_type_ids: selectedSkinTypes.length > 0 ? selectedSkinTypes.join(',') : undefined,
@@ -61,9 +74,22 @@ export default function ProductsPage() {
     }),
   });
 
-  const products = productsResponse?.data?.items || [];
+  // Synchronous state synchronization during render to eliminate frame lag
+  if (productsResponse && productsResponse !== prevResponse) {
+    setPrevResponse(productsResponse);
+    const newItems = productsResponse.data?.items || [];
+    setAccumulatedProducts((prev) => {
+      if (page === 1) {
+        return newItems;
+      }
+      const existingIds = new Set(prev.map((p) => p.id));
+      const filteredNewItems = newItems.filter((item) => !existingIds.has(item.id));
+      return [...prev, ...filteredNewItems];
+    });
+  }
 
-  const filteredProducts = products;
+  const filteredProducts = accumulatedProducts;
+  const hasNextPage = productsResponse?.data?.meta?.hasNextPage || false;
 
   const toggleSkinType = (id: number) => {
     setSelectedSkinTypes((prev) =>
@@ -298,58 +324,87 @@ export default function ProductsPage() {
             </div>
 
             {/* Products */}
-            {isLoading ? (
+            {isLoading && filteredProducts.length === 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[...Array(8)].map((_, i) => (
-                  <ProductCardSkeleton key={i} />
+                  <ProductCardSkeleton key={`initial-skeleton-${i}`} />
                 ))}
               </div>
             ) : filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredProducts.map((product) => (
-                  <Link key={product.id} href={`/products/${product.slug}`} className="group h-full">
-                    <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 h-full flex flex-col border border-gray-100">
-                      {/* Image Container - Square */}
-                      <div className="relative aspect-square bg-[#f8f9fa] overflow-hidden p-6">
-                        <Image
-                          src={product.image_url || '/placeholder.png'}
-                          alt={product.name}
-                          fill
-                          className="object-contain p-4 group-hover:scale-110 transition-transform duration-700 ease-out"
-                        />
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-5 flex-1 flex flex-col">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-[#7a9e8e] bg-[#7a9e8e]/5 px-2 py-1 rounded">
-                            {product.categories?.[0]?.name || 'Uncategorized'}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            <span className="text-[10px] font-bold text-gray-900">★ 4.9</span>
-                          </div>
+              <div className="space-y-12">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {filteredProducts.map((product) => (
+                    <Link key={product.id} href={`/products/${product.slug}`} className="group h-full">
+                      <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 h-full flex flex-col border border-gray-100">
+                        {/* Image Container - Square */}
+                        <div className="relative aspect-square bg-[#f8f9fa] overflow-hidden p-6">
+                          <Image
+                            src={product.image_url || '/placeholder.png'}
+                            alt={product.name}
+                            fill
+                            className="object-contain p-4 group-hover:scale-110 transition-transform duration-700 ease-out"
+                          />
                         </div>
 
-                        <h3 className="font-bold text-gray-900 mb-2 group-hover:text-[#7a9e8e] transition-colors line-clamp-2 leading-snug flex-1">
-                          {product.name}
-                        </h3>
-
-                        <div className="mt-auto pt-4 border-t border-gray-50">
-                          <div className="flex justify-between items-center gap-2">
-                            <div className="flex flex-col">
-                              <span className="text-lg font-black text-gray-900">
-                                {product.price.toLocaleString('vi-VN')}₫
-                              </span>
+                        {/* Content */}
+                        <div className="p-5 flex-1 flex flex-col">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#7a9e8e] bg-[#7a9e8e]/5 px-2 py-1 rounded">
+                              {product.categories?.[0]?.name || 'Uncategorized'}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-[10px] font-bold text-gray-900">★ 4.9</span>
                             </div>
-                            <button className="w-10 h-10 bg-[#7a9e8e] text-white rounded-full flex items-center justify-center hover:bg-[#5a7a6b] transition-all shadow-md active:scale-95 group-hover:rotate-90">
-                              <Plus className="w-5 h-5" />
-                            </button>
+                          </div>
+
+                          <h3 className="font-bold text-gray-900 mb-2 group-hover:text-[#7a9e8e] transition-colors line-clamp-2 leading-snug flex-1">
+                            {product.name}
+                          </h3>
+
+                          <div className="mt-auto pt-4 border-t border-gray-50">
+                            <div className="flex justify-between items-center gap-2">
+                              <div className="flex flex-col">
+                                <span className="text-lg font-black text-gray-900">
+                                  {product.price.toLocaleString('vi-VN')}₫
+                                </span>
+                              </div>
+                              <button className="w-10 h-10 bg-[#7a9e8e] text-white rounded-full flex items-center justify-center hover:bg-[#5a7a6b] transition-all shadow-md active:scale-95 group-hover:rotate-90">
+                                <Plus className="w-5 h-5" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  ))}
+
+                  {/* Append skeletons at the bottom of the grid when loading more pages */}
+                  {isFetching && (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <ProductCardSkeleton key={`more-skeleton-${i}`} />
+                    ))
+                  )}
+                </div>
+
+                {/* Load More Button */}
+                {hasNextPage && (
+                  <div className="flex justify-center mt-10">
+                    <button
+                      onClick={() => setPage((p) => p + 1)}
+                      disabled={isFetching}
+                      className="px-10 py-4 bg-[#7a9e8e] text-white font-bold text-sm rounded-2xl hover:bg-[#5a7a6b] transition-all duration-300 flex items-center gap-2 shadow-md disabled:opacity-50 cursor-pointer active:scale-95"
+                    >
+                      {isFetching ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-white" />
+                          Đang tải thêm...
+                        </>
+                      ) : (
+                        'Xem thêm sản phẩm'
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="bg-white rounded-lg p-12 text-center border border-[#e8e5dd]">

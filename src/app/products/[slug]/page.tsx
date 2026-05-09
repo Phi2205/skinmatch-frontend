@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { getProductBySlug } from '@/modules/product/services/product.service';
+import { getProductBySlug, getSimilarProducts } from '@/modules/product/services/product.service';
 import { ProductSkeleton } from '@/modules/product/components/product-skeleton';
 import { useCart } from '@/modules/cart/hooks/useCart';
 import { toast } from 'sonner';
@@ -94,6 +94,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   });
 
   const apiProduct = productResponse?.data;
+
+  const { data: similarResponse, isLoading: isSimilarLoading } = useQuery({
+    queryKey: ['similarProducts', apiProduct?.id],
+    queryFn: () => getSimilarProducts(apiProduct!.id, 4),
+    enabled: !!apiProduct?.id,
+  });
+
+  const similarProducts = similarResponse?.data || [];
   const productInfoRef = useRef<HTMLDivElement>(null);
 
   const visibleSections = useMemo(() => {
@@ -587,6 +595,81 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </button>
               </div>
             </section>
+
+            {/* Similar Products Section */}
+            {(isSimilarLoading || (similarProducts && similarProducts.length > 0)) && (
+              <section className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 md:p-8 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
+                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Sản phẩm tương tự</h3>
+                </div>
+                <div className="p-8">
+                  {isSimilarLoading ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                      {[...Array(4)].map((_, idx) => (
+                        <div key={idx} className="bg-white rounded-2xl overflow-hidden border border-gray-100 p-5 space-y-4 animate-pulse">
+                          <div className="aspect-square bg-gray-100 rounded-xl w-full" />
+                          <div className="h-4 bg-gray-100 rounded w-1/3" />
+                          <div className="h-5 bg-gray-100 rounded w-full" />
+                          <div className="flex justify-between items-center pt-2">
+                            <div className="h-6 bg-gray-100 rounded w-1/2" />
+                            <div className="w-8 h-8 rounded-full bg-gray-100" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                      {similarProducts.map((p) => {
+                        const minPrice = p.price || 0;
+                        const productImg = p.image_url || p.images?.[0]?.image_url || '/placeholder.png';
+                        return (
+                          <Link key={p.id} href={`/products/${p.slug}`} className="group h-full block">
+                            <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 h-full flex flex-col border border-gray-100">
+                              {/* Image Container */}
+                              <div className="relative aspect-square bg-[#f8f9fa] overflow-hidden p-6">
+                                <Image
+                                  src={productImg}
+                                  alt={p.name}
+                                  fill
+                                  className="object-contain p-4 group-hover:scale-110 transition-transform duration-700 ease-out"
+                                />
+                              </div>
+
+                              {/* Content */}
+                              <div className="p-5 flex-1 flex flex-col">
+                                <div className="flex items-center justify-between mb-3">
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-[#7a9e8e] bg-[#7a9e8e]/5 px-2 py-1 rounded">
+                                    {p.categories?.[0]?.name || 'Sản phẩm'}
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[10px] font-bold text-gray-900">★ 4.9</span>
+                                  </div>
+                                </div>
+
+                                <h3 className="font-bold text-gray-900 mb-2 group-hover:text-[#326e51] transition-colors line-clamp-2 leading-snug flex-1 text-xs">
+                                  {p.name}
+                                </h3>
+
+                                <div className="mt-auto pt-4 border-t border-gray-50">
+                                  <div className="flex justify-between items-center gap-2">
+                                    <span className="text-sm font-black text-[#326e51]">
+                                      {minPrice.toLocaleString('vi-VN')}₫
+                                    </span>
+                                    <button className="w-8 h-8 bg-[#326e51] text-white rounded-full flex items-center justify-center hover:bg-[#25543d] transition-all shadow-md active:scale-95 group-hover:rotate-90 cursor-pointer">
+                                      <Plus className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
           </div>
 
           {/* Sidebar */}

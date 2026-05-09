@@ -106,9 +106,7 @@ export function useChatbot() {
     if (!textToSend || isLoading) return;
 
     // Clear input
-    if (!customText) {
-      setInput('');
-    }
+    setInput('');
 
     // Add user message to UI immediately
     const userMsgId = `user-${Date.now()}`;
