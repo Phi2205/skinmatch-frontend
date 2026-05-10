@@ -50,7 +50,7 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Header />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center pt-28">
           <p>Loading...</p>
         </div>
         <Footer />
@@ -62,7 +62,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
 
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
+      <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-28 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">

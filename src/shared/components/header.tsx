@@ -91,7 +91,7 @@ export function Header() {
                           </Link>
                         )}
                         
-                        <Link href="/account" className="flex items-center gap-3 px-6 py-3 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all">
+                        <Link href="/dashboard" className="flex items-center gap-3 px-6 py-3 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all">
                           <UserIcon size={18} className="text-[#9eb57a]" />
                           My Profile
                         </Link>
