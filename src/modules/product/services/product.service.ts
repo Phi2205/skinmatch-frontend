@@ -46,6 +46,18 @@ export const getProductBySlug = async (slug: string): Promise<ApiResponse<Produc
     }
 }
 
+export const getSimilarProducts = async (id: number, limit = 4): Promise<ApiResponse<Product[]>> => {
+    try {
+        const response = await axiosInstance.get<ApiResponse<Product[]>>(`/products/${id}/similar`, {
+            params: { limit }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching similar products:', error);
+        throw error;
+    }
+}
+
 export const createProduct = async (data: FormData): Promise<ApiResponse<Product>> => {
     try {
         const response = await axiosInstance.post<ApiResponse<Product>>('/products', data, {

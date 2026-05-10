@@ -69,14 +69,14 @@ export default function Home() {
 
           <BestSellers />
 
-          <div className="text-center mt-12">
+          {/* <div className="text-center mt-12">
             <Link
               href="/products"
               className="inline-block px-8 py-3 bg-[#7a9e8e] text-white font-semibold rounded-lg hover:bg-[#5a7a6b] transition"
             >
               View All Products
             </Link>
-          </div>
+          </div> */}
         </div>
       </section>
 
