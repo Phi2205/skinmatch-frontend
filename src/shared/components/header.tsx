@@ -1,5 +1,5 @@
 'use client';
- 
+
 import Link from 'next/link';
 import { ShoppingBag, Menu, X, User as UserIcon, LogOut, LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
@@ -52,8 +52,8 @@ export function Header() {
           {/* Right Side Actions */}
           <div className="flex items-center gap-1">
             {/* Cart Button */}
-            <Link 
-              href="/cart" 
+            <Link
+              href="/cart"
               className="flex items-center gap-3 bg-white hover:bg-gray-50 transition rounded-full pl-4 pr-1 py-1 shadow-sm border border-gray-100"
             >
               <span className="text-[10px] font-bold tracking-widest text-[#4a4a4a]">CART({itemCount})</span>
@@ -69,11 +69,11 @@ export function Header() {
                   <button className="w-10 h-10 rounded-full bg-[#7a9e8e] flex items-center justify-center text-white font-bold shadow-sm border-2 border-white hover:scale-105 transition">
                     {user.name?.charAt(0).toUpperCase() || 'U'}
                   </button>
-                  
+
                   {/* Dropdown Menu */}
                   <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 transform translate-y-2 group-hover:translate-y-0">
-                    <DarkGlassCard 
-                      className="w-60 overflow-hidden !rounded-2xl border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]" 
+                    <DarkGlassCard
+                      className="w-60 overflow-hidden !rounded-2xl border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
                       variant="none"
                       opacity={0.85}
                       blur={25}
@@ -82,7 +82,7 @@ export function Header() {
                         <p className="text-sm font-bold text-white truncate">{user.name}</p>
                         <p className="text-xs text-gray-400 truncate mt-0.5">{user.email}</p>
                       </div>
-                      
+
                       <div className="py-2">
                         {user.role === 'ADMIN' && (
                           <Link href="/admin/dashboard" className="flex items-center gap-3 px-6 py-3 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all">
@@ -90,14 +90,14 @@ export function Header() {
                             Admin Panel
                           </Link>
                         )}
-                        
+
                         <Link href="/dashboard" className="flex items-center gap-3 px-6 py-3 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all">
                           <UserIcon size={18} className="text-[#9eb57a]" />
                           My Profile
                         </Link>
-                        
+
                         <div className="px-4 pt-2 mt-2 border-t border-white/10">
-                          <button 
+                          <button
                             onClick={handleLogout}
                             className="w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all text-left"
                           >
@@ -110,8 +110,8 @@ export function Header() {
                   </div>
                 </div>
               ) : (
-                <Link 
-                  href="/login" 
+                <Link
+                  href="/login"
                   className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200 transition"
                 >
                   <UserIcon size={20} />
