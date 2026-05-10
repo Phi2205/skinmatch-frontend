@@ -2,6 +2,7 @@ import { LoginPayload, RegisterPayload } from "../types/auth.type";
 import axios from "axios";
 import { ApiResponse } from "@/types/response.type";
 import { User } from "../types/user.type";
+import { axiosInstance } from "@/services/axiosInstance";
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -69,3 +70,13 @@ export const refresh = async () => {
     return null;
   }
 }
+
+export interface UpdatePasswordPayload {
+  oldPassword?: string;
+  newPassword: string;
+}
+
+export const updatePassword = async (data: UpdatePasswordPayload): Promise<ApiResponse<any>> => {
+  const response = await axiosInstance.put<ApiResponse<any>>('/auth/update-password', data);
+  return response.data;
+}

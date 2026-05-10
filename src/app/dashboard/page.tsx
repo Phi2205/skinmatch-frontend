@@ -11,6 +11,7 @@ import { ProfileTab } from '@/modules/dashboard/components/profile-tab';
 import { OrdersTab } from '@/modules/orders/components/orders-tab';
 import { WishlistTab } from '@/modules/dashboard/components/wishlist-tab';
 import { SettingsTab } from '@/modules/dashboard/components/settings-tab';
+import { useAuth } from '@/contexts/authContext';
 
 interface UserData {
   id: string;
@@ -21,6 +22,7 @@ interface UserData {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { logout } = useAuth();
   const [user, setUser] = useState<UserData | null>(null);
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(true);
@@ -84,9 +86,7 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      localStorage.removeItem('user');
-      router.push('/');
+      await logout();
     } catch (error) {
       console.error('Logout failed:', error);
     }
