@@ -62,7 +62,7 @@ export const verifyOtp = async (data: { email: string, otp: string }): Promise<A
 
 export const refresh = async () => {
   try {
-    const response = await axiosPublic.post<ApiResponse<{ user: User }>>('/auth/refresh');
+    const response = await axiosPublic.post<ApiResponse<{ user: User }>>('/auth/refresh-token');
     return response.data;
   } catch (error) {
     console.error('Refresh API error:', error);
