@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingBag, Star, Sparkles, Heart, Plus, Loader2 } from 'lucide-react';
+import { ShoppingBag, Star, Sparkles, Heart, Plus, Loader2, Zap } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getProductsByBadgeSlug } from '@/modules/product/services/product.service';
 import { useCart } from '@/modules/cart/hooks/useCart';
@@ -92,7 +92,29 @@ export function BestSellers() {
           accumulatedProducts.map((productItem) => {
             const product = productItem as any;
             const productImg = product.image_url || '/placeholder.png';
-            const discountPercent = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
+
+            // Resolve active flash sale at product or variant level
+            const activeFlashSale = product.flash_sale || (product.variants || []).find((v: any) => v.flash_sale)?.flash_sale;
+
+            const hasActiveFlashSale = (() => {
+              if (!activeFlashSale) return false;
+              const now = new Date().getTime();
+              const start = new Date(activeFlashSale.start_at).getTime();
+              const end = new Date(activeFlashSale.end_at).getTime();
+              return now >= start && now <= end;
+            })();
+
+            const currentPrice = hasActiveFlashSale && activeFlashSale
+              ? activeFlashSale.sale_price
+              : product.price;
+
+            const currentOriginalPrice = hasActiveFlashSale && activeFlashSale
+              ? product.price
+              : product.originalPrice;
+
+            const discountPercent = currentOriginalPrice
+              ? Math.round(((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100)
+              : 0;
 
             return (
               <div key={product.id} className="group relative bg-white rounded-3xl overflow-hidden border border-gray-100/80 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full">
@@ -105,15 +127,18 @@ export function BestSellers() {
                       <span className="px-2.5 py-1 bg-[#326e51] text-white text-[9px] font-black uppercase tracking-wider rounded-lg shadow-sm flex items-center gap-1">
                         <Sparkles className="w-3 h-3 text-yellow-300 fill-yellow-300 animate-pulse" /> BÁN CHẠY
                       </span>
-                      {discountPercent > 0 && (
-                        <span className="px-2 py-0.5 bg-red-600 text-white text-[9px] font-black uppercase rounded-md shadow-sm self-start">
-                          -{discountPercent}%
-                        </span>
-                      )}
                     </div>
 
+                    {/* Corner Discount Badge (Hasaki Style) */}
+                    {discountPercent > 0 && (
+                      <div className="absolute top-0 right-0 z-10 bg-[#326e51] text-white font-black text-xs px-3.5 py-1.5 rounded-bl-2xl shadow-sm flex items-center gap-1">
+                        {hasActiveFlashSale && <Zap size={11} className="fill-amber-300 text-amber-300 animate-pulse" />}
+                        <span>-{discountPercent}%</span>
+                      </div>
+                    )}
+
                     {/* Decorative Heart Button */}
-                    <button className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors cursor-pointer hover:scale-115 active:scale-95 shadow-sm">
+                    <button className="absolute top-12 right-4 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors cursor-pointer hover:scale-115 active:scale-95 shadow-sm">
                       <Heart size={14} className="hover:fill-red-500" />
                     </button>
 
@@ -156,11 +181,11 @@ export function BestSellers() {
                     <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between gap-2">
                       <div className="flex flex-col">
                         <span className="text-base font-black text-[#326e51]">
-                          {formatPrice(product.price)}
+                          {formatPrice(currentPrice)}
                         </span>
-                        {product.originalPrice && (
+                        {currentOriginalPrice && (
                           <span className="text-[11px] text-gray-400 line-through">
-                            {formatPrice(product.originalPrice)}
+                            {formatPrice(currentOriginalPrice)}
                           </span>
                         )}
                       </div>

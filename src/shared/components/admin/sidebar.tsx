@@ -10,7 +10,8 @@ import {
   Droplets,
   AlertCircle,
   Beaker,
-  Award
+  Award,
+  Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -21,6 +22,7 @@ export function AdminSidebar() {
   const menuItems = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Manage Products', href: '/admin/products', icon: ShoppingBag },
+    { name: 'Manage Flash Sales', href: '/admin/flash-sales', icon: Zap },
     { name: 'Manage Categories', href: '/admin/categories', icon: Tag },
     { name: 'Manage Skin Types', href: '/admin/skin-types', icon: Droplets },
     { name: 'Manage Concerns', href: '/admin/concerns', icon: AlertCircle },

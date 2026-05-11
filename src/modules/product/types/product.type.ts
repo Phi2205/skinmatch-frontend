@@ -4,12 +4,22 @@ export interface VariantAttribute {
   value: string;
 }
 
+export interface ProductFlashSale {
+  item_id: number;
+  campaign_id: number;
+  sale_price: number;
+  campaign_title: string;
+  start_at: string;
+  end_at: string;
+}
+
 export interface ProductVariant {
   id?: number;
   price: number;
   sku?: string;
   stock?: number;
   attributes: VariantAttribute[];
+  flash_sale?: ProductFlashSale | null;
 }
 
 export interface Product {
@@ -25,6 +35,8 @@ export interface Product {
   image_url: string | null;
   is_featured: boolean;
   is_active: boolean;
+  rating: number;
+  reviews_count: number;
   summary: string | null;
   created_at: string | null;
   categories: {
@@ -68,6 +80,7 @@ export interface Product {
     is_main: boolean;
     position: number;
   }[];
+  flash_sale?: ProductFlashSale | null;
 }
 
 export interface ProductQueryParams {
@@ -100,4 +113,33 @@ export interface PaginatedResponse<T> {
     items: T[];
     meta: PaginationMeta;
   };
+}
+
+export interface CreateReviewData {
+  orderItemId: number;
+  rating: number;
+  comment?: string;
+  images?: File[];
+}
+
+export interface ProductReviewUser {
+  id: number;
+  name: string;
+  email: string;
+}
+
+export interface ProductReviewImage {
+  id: number;
+  image_url: string;
+}
+
+export interface ProductReview {
+  id: number;
+  user_id: number;
+  product_id: number;
+  rating: number;
+  comment?: string;
+  created_at: string;
+  users: ProductReviewUser;
+  review_images: ProductReviewImage[];
 }

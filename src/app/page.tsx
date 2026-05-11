@@ -6,7 +6,7 @@ import { Hero } from '@/shared/components/hero';
 import Link from 'next/link';
 import { Leaf, Shield, Recycle } from 'lucide-react';
 import { BestSellers } from '@/modules/product/components/best-sellers';
-import { FlashSale } from '@/modules/product/components/flash-sale';
+import { FlashSale } from '@/modules/flash-sales/components/flash-sale';
 
 export default function Home() {
 

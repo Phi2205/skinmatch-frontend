@@ -3,20 +3,28 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getUserOrders, getOrderById } from '../services/orders.service';
 import { Order } from '../types/orders.type';
+import { PaginationMeta } from '@/modules/product/types/product.type';
 import { toast } from 'sonner';
 
 export function useOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = useCallback(async (page?: number, limit?: number) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await getUserOrders();
+      const response = await getUserOrders(page, limit);
       if (response.success && response.data) {
-        setOrders(response.data);
+        if (Array.isArray(response.data)) {
+          setOrders(response.data);
+          setMeta(null);
+        } else {
+          setOrders(response.data.items);
+          setMeta(response.data.meta);
+        }
       } else {
         setError('Failed to fetch orders');
       }
@@ -41,6 +49,7 @@ export function useOrders() {
 
   return {
     orders,
+    meta,
     isLoading,
     error,
     fetchOrders,

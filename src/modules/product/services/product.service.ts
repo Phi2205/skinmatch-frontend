@@ -1,5 +1,5 @@
 import axiosInstance from "@/services/axiosInstance";
-import { PaginatedResponse, Product, ProductQueryParams } from "../types/product.type";
+import { PaginatedResponse, Product, ProductQueryParams, CreateReviewData, ProductReview, PaginationMeta } from "../types/product.type";
 import { ApiResponse } from "@/types/response.type";
 
 export const getProducts = async (params: ProductQueryParams = {}): Promise<PaginatedResponse<Product>> => {
@@ -174,6 +174,56 @@ export const reorderProductImages = async (productId: number, images: { id: numb
         return response.data;
     } catch (error) {
         console.error('Error reordering product images:', error);
+        throw error;
+    }
+}
+
+export const createProductReview = async (productId: number, data: CreateReviewData | FormData): Promise<ApiResponse<any>> => {
+    try {
+        let payload: FormData;
+        if (data instanceof FormData) {
+            payload = data;
+        } else {
+            payload = new FormData();
+            payload.append('orderItemId', data.orderItemId.toString());
+            payload.append('rating', data.rating.toString());
+            if (data.comment) {
+                payload.append('comment', data.comment);
+            }
+            if (data.images && data.images.length > 0) {
+                data.images.forEach((file) => {
+                    payload.append('images', file);
+                });
+            }
+        }
+
+        const response = await axiosInstance.post<ApiResponse<any>>(`/products/${productId}/reviews`, payload, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error(`Error creating review for product #${productId}:`, error);
+        throw error;
+    }
+}
+
+export const getProductReviews = async (
+    productId: number,
+    page?: number,
+    limit?: number
+): Promise<ApiResponse<ProductReview[]> & { meta?: PaginationMeta }> => {
+    try {
+        const queryParams = new URLSearchParams();
+        if (page) queryParams.append('page', page.toString());
+        if (limit) queryParams.append('limit', limit.toString());
+        
+        const url = `/products/${productId}/reviews${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const response = await axiosInstance.get<ApiResponse<ProductReview[]> & { meta?: PaginationMeta }>(url);
+        return response.data;
+    } catch (error) {
+        console.error(`Error fetching reviews for product #${productId}:`, error);
         throw error;
     }
 }

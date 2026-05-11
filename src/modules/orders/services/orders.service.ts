@@ -1,6 +1,7 @@
 import axiosInstance from "@/services/axiosInstance";
 import { ApiResponse } from "@/types/response.type";
 import { CreateDirectOrderRequest, CreateOrderRequest, Order } from "../types/orders.type";
+import { PaginationMeta } from "@/modules/product/types/product.type";
 
 export const createOrder = async (data: CreateOrderRequest): Promise<ApiResponse<Order>> => {
   try {
@@ -22,9 +23,17 @@ export const createDirectOrder = async (data: CreateDirectOrderRequest): Promise
   }
 };
 
-export const getUserOrders = async (): Promise<ApiResponse<Order[]>> => {
+export const getUserOrders = async (
+  page?: number,
+  limit?: number
+): Promise<ApiResponse<Order[] | { items: Order[]; meta: PaginationMeta }>> => {
   try {
-    const response = await axiosInstance.get<ApiResponse<Order[]>>('/orders');
+    const params = new URLSearchParams();
+    if (page !== undefined) params.append('page', page.toString());
+    if (limit !== undefined) params.append('limit', limit.toString());
+
+    const url = params.toString() ? `/orders?${params.toString()}` : '/orders';
+    const response = await axiosInstance.get<ApiResponse<Order[] | { items: Order[]; meta: PaginationMeta }>>(url);
     return response.data;
   } catch (error) {
     console.error('Error fetching user orders:', error);
