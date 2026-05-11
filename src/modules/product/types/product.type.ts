@@ -4,12 +4,22 @@ export interface VariantAttribute {
   value: string;
 }
 
+export interface ProductFlashSale {
+  item_id: number;
+  campaign_id: number;
+  sale_price: number;
+  campaign_title: string;
+  start_at: string;
+  end_at: string;
+}
+
 export interface ProductVariant {
   id?: number;
   price: number;
   sku?: string;
   stock?: number;
   attributes: VariantAttribute[];
+  flash_sale?: ProductFlashSale | null;
 }
 
 export interface Product {
@@ -70,6 +80,7 @@ export interface Product {
     is_main: boolean;
     position: number;
   }[];
+  flash_sale?: ProductFlashSale | null;
 }
 
 export interface ProductQueryParams {

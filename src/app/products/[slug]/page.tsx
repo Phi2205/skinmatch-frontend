@@ -21,7 +21,8 @@ import {
   ChevronDown,
   ChevronUp,
   Minus,
-  Plus
+  Plus,
+  Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -173,6 +174,47 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     }
   }, [apiProduct, selectedVariantId]);
 
+  const activeFlashSale = useMemo(() => {
+    const sVariant = apiProduct?.variants?.find((v: any) => v.id === selectedVariantId) || apiProduct?.variants?.[0];
+    return sVariant?.flash_sale || apiProduct?.flash_sale;
+  }, [apiProduct, selectedVariantId]);
+
+  const hasActiveFlashSale = useMemo(() => {
+    if (!activeFlashSale) return false;
+    const now = new Date().getTime();
+    const start = new Date(activeFlashSale.start_at).getTime();
+    const end = new Date(activeFlashSale.end_at).getTime();
+    return now >= start && now <= end;
+  }, [activeFlashSale]);
+
+  const [fsTimeLeft, setFsTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    if (!hasActiveFlashSale || !activeFlashSale?.end_at) return;
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const endTime = new Date(activeFlashSale.end_at).getTime();
+      const diff = endTime - now;
+
+      if (diff <= 0) {
+        setFsTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setFsTimeLeft({ days, hours, minutes, seconds });
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [hasActiveFlashSale, activeFlashSale?.end_at]);
+
   if (isLoading) {
     return <ProductSkeleton />;
   }
@@ -200,16 +242,23 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   // Ensure there is at least one image for the UI to avoid crashes
   if (product.images.length === 0) {
-    product.images = [{ 
-      id: 0, 
-      image_url: apiProduct.image_url || '/placeholder.png', 
-      position: 0 
+    product.images = [{
+      id: 0,
+      image_url: apiProduct.image_url || '/placeholder.png',
+      position: 0
     }];
   }
 
   const selectedVariant = product.variants.find(v => v.id === selectedVariantId) || product.variants[0];
-  const currentPrice = selectedVariant?.price || product.price;
-  const currentOriginalPrice = product.originalPrice; // or variant specific if available
+
+  const currentPrice = hasActiveFlashSale && activeFlashSale
+    ? activeFlashSale.sale_price
+    : (selectedVariant?.price || product.price);
+
+  const currentOriginalPrice = hasActiveFlashSale && activeFlashSale
+    ? (selectedVariant?.price || product.price)
+    : null;
+
   const discount = currentOriginalPrice ? Math.round(((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100) : 0;
   const handleAddToCart = async () => {
     if (!apiProduct) return;
@@ -251,22 +300,22 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </div>
                   </div>
                 </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={handleAddToCart}
-                      className="px-4 py-2.5 bg-white border-2 border-[#326e51] text-[#326e51] text-[10px] font-black rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-2 cursor-pointer"
-                    >
-                      <ShoppingCart size={14} />
-                      THÊM GIỎ HÀNG
-                    </button>
-                    <button 
-                      onClick={() => setIsCheckoutOpen(true)}
-                      className="px-6 py-2.5 bg-[#326e51] text-white text-[10px] font-black rounded-xl hover:bg-[#25543d] transition-colors flex items-center gap-2 cursor-pointer"
-                    >
-                      MUA NGAY
-                    </button>
-                  </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleAddToCart}
+                    className="px-4 py-2.5 bg-white border-2 border-[#326e51] text-[#326e51] text-[10px] font-black rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <ShoppingCart size={14} />
+                    THÊM GIỎ HÀNG
+                  </button>
+                  <button
+                    onClick={() => setIsCheckoutOpen(true)}
+                    className="px-6 py-2.5 bg-[#326e51] text-white text-[10px] font-black rounded-xl hover:bg-[#25543d] transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    MUA NGAY
+                  </button>
                 </div>
+              </div>
 
               {/* Navigation Tabs (Sticky) */}
               <div className="flex gap-8 overflow-x-auto scrollbar-hide py-3">
@@ -361,16 +410,15 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                         const isFull = starVal <= Math.floor(product.rating || 0);
                         const isHalf = !isFull && (starVal - 0.5 <= (product.rating || 0));
                         return (
-                          <Star 
-                            key={starVal} 
-                            size={16} 
-                            className={`${
-                              isFull 
-                                ? 'fill-yellow-400 text-yellow-400' 
-                                : isHalf 
-                                  ? 'fill-yellow-400/50 text-yellow-400'
-                                  : 'text-gray-200 fill-transparent'
-                            }`} 
+                          <Star
+                            key={starVal}
+                            size={16}
+                            className={`${isFull
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : isHalf
+                                ? 'fill-yellow-400/50 text-yellow-400'
+                                : 'text-gray-200 fill-transparent'
+                              }`}
                           />
                         );
                       })}
@@ -380,6 +428,40 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   <span className="text-sm text-gray-500 font-medium">{(product.reviews_count ?? product.reviewsCount ?? 0)} Đánh giá</span>
                   <span className="text-sm text-gray-500 font-medium">Đã bán {product.soldCount}+</span>
                 </div>
+
+                {hasActiveFlashSale && activeFlashSale && (
+                  <div className="bg-[#2f6a4f] text-white rounded-lg px-4 py-2.5 flex items-center justify-between shadow-sm">
+                    {/* Left Part: FLASH DEAL Label */}
+                    <div className="flex items-center gap-1.5 font-black uppercase text-xs sm:text-sm tracking-wider italic">
+                      <Zap size={16} className="fill-amber-400 text-amber-400 animate-pulse" />
+                      <span>FLASH DEAL</span>
+                    </div>
+
+                    {/* Right Part: Countdown Timer */}
+                    <div className="flex items-center gap-2 text-xs sm:text-sm font-bold">
+                      <span className="text-white/95 text-[10px] sm:text-xs tracking-wider uppercase font-black mr-1">
+                        KẾT THÚC TRONG
+                      </span>
+
+                      {/* 4-Block Countdown digits */}
+                      <span className="bg-black text-white text-xs sm:text-sm font-black px-1.5 py-0.5 rounded min-w-[20px] text-center shadow-inner">
+                        {fsTimeLeft.days}
+                      </span>
+                      <span className="text-white font-black text-xs sm:text-sm">:</span>
+                      <span className="bg-black text-white text-xs sm:text-sm font-black px-1.5 py-0.5 rounded min-w-[24px] text-center shadow-inner">
+                        {String(fsTimeLeft.hours).padStart(2, '0')}
+                      </span>
+                      <span className="text-white font-black text-xs sm:text-sm">:</span>
+                      <span className="bg-black text-white text-xs sm:text-sm font-black px-1.5 py-0.5 rounded min-w-[24px] text-center shadow-inner">
+                        {String(fsTimeLeft.minutes).padStart(2, '0')}
+                      </span>
+                      <span className="text-white font-black text-xs sm:text-sm">:</span>
+                      <span className="bg-black text-white text-xs sm:text-sm font-black px-1.5 py-0.5 rounded min-w-[24px] text-center shadow-inner">
+                        {String(fsTimeLeft.seconds).padStart(2, '0')}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="p-6 bg-gray-50 rounded-2xl space-y-4">
                   <div className="flex items-baseline gap-4">
@@ -391,7 +473,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </>
                     )}
                   </div>
-                  
+
                   {product.variants.length > 0 && (
                     <div className="space-y-4 pt-4 border-t border-gray-100">
                       <div className="flex items-center justify-between">
@@ -399,11 +481,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           {product.variants[0]?.attributes?.[0]?.name || 'Phiên bản'}
                         </p>
                         {selectedVariant && selectedVariant.stock !== undefined && (
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            selectedVariant.stock > 0 
-                              ? 'bg-green-50 text-green-600' 
-                              : 'bg-red-50 text-red-600'
-                          }`}>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${selectedVariant.stock > 0
+                            ? 'bg-green-50 text-green-600'
+                            : 'bg-red-50 text-red-600'
+                            }`}>
                             {selectedVariant.stock > 0 ? `Còn ${selectedVariant.stock} sản phẩm` : 'Hết hàng'}
                           </span>
                         )}
@@ -414,19 +495,18 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             key={v.id}
                             disabled={v.stock === 0}
                             onClick={() => setSelectedVariantId(v.id || null)}
-                            className={`group relative px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 border-2 flex flex-col items-center min-w-[80px] cursor-pointer ${
-                              selectedVariant?.id === v.id
-                                ? 'bg-[#326e51] text-white border-[#326e51] shadow-lg shadow-[#326e51]/20 scale-105'
-                                : v.stock === 0
-                                  ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed opacity-60'
-                                  : 'bg-white text-gray-700 border-gray-100 hover:border-[#326e51] hover:text-[#326e51]'
-                            }`}
+                            className={`group relative px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 border-2 flex flex-col items-center min-w-[80px] cursor-pointer ${selectedVariant?.id === v.id
+                              ? 'bg-[#326e51] text-white border-[#326e51] shadow-lg shadow-[#326e51]/20 scale-105'
+                              : v.stock === 0
+                                ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed opacity-60'
+                                : 'bg-white text-gray-700 border-gray-100 hover:border-[#326e51] hover:text-[#326e51]'
+                              }`}
                           >
                             <span className="relative z-10">
                               {v.attributes.map(a => a.value).join(' / ')}
                             </span>
                             {selectedVariant?.id === v.id && (
-                              <motion.div 
+                              <motion.div
                                 layoutId="activeVariant"
                                 className="absolute inset-0 bg-[#326e51] rounded-2xl -z-10"
                                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
@@ -448,14 +528,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 <div className="flex items-center gap-4 pt-4">
                   <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Số lượng</p>
                   <div className="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    <button 
+                    <button
                       onClick={() => setQuantity(q => Math.max(1, q - 1))}
                       className="p-3 hover:bg-gray-50 transition-colors text-gray-500 cursor-pointer active:scale-95"
                     >
                       <Minus size={16} />
                     </button>
                     <span className="w-12 text-center font-black text-gray-900">{quantity}</span>
-                    <button 
+                    <button
                       onClick={() => setQuantity(q => q + 1)}
                       className="p-3 hover:bg-gray-50 transition-colors text-gray-500 cursor-pointer active:scale-95"
                     >
@@ -466,14 +546,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-3 h-auto sm:h-14 pt-4">
-                  <button 
+                  <button
                     onClick={handleAddToCart}
                     className="flex-1 border-2 border-[#326e51] text-[#326e51] font-black rounded-2xl hover:bg-gray-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <ShoppingCart />
                     THÊM GIỎ HÀNG
                   </button>
-                  <button 
+                  <button
                     onClick={() => setIsCheckoutOpen(true)}
                     className="flex-1 bg-[#326e51] text-white font-black rounded-2xl hover:bg-[#25543d] transition-all shadow-lg shadow-[#326e51]/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                   >
@@ -514,20 +594,20 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Thông tin sản phẩm</h3>
                 </div>
                 <div className="relative">
-                  <div 
+                  <div
                     className={`transition-all duration-500 overflow-hidden ${!isDescriptionExpanded ? 'max-h-[400px]' : 'max-h-none'}`}
                   >
                     <div className="p-8">
                       <div className="prose prose-sm prose-slate max-w-none w-full !whitespace-normal !break-normal !break-words prose-p:text-gray-600 prose-p:leading-relaxed prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5" dangerouslySetInnerHTML={{ __html: product.description.replace(/&nbsp;|\u00A0/g, ' ') }} />
                     </div>
                   </div>
-                  
+
                   {!isDescriptionExpanded && (
                     <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
                   )}
-                  
+
                   <div className={`p-6 flex justify-center ${isDescriptionExpanded ? 'border-t border-gray-50' : ''}`}>
-                    <button 
+                    <button
                       onClick={() => {
                         if (isDescriptionExpanded) {
                           scrollToSection('description');
@@ -617,10 +697,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       const userName = review.users?.name || 'Khách hàng';
                       const formattedDate = review.created_at
                         ? new Date(review.created_at).toLocaleDateString('vi-VN', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit',
-                          })
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                        })
                         : 'Vừa xong';
 
                       return (
@@ -647,7 +727,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             </div>
                             <span className="text-[10px] font-bold text-gray-400">{formattedDate}</span>
                           </div>
-                          
+
                           <p className="text-sm text-gray-600 leading-relaxed pl-13 whitespace-pre-line">
                             {review.comment || 'Khách hàng không để lại bình luận.'}
                           </p>
@@ -695,11 +775,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                               <button
                                 key={pageNum}
                                 onClick={() => setReviewsPage(pageNum)}
-                                className={`w-9 h-9 rounded-xl font-bold text-xs border flex items-center justify-center transition-all ${
-                                  meta.page === pageNum
-                                    ? 'bg-[#326e51] text-white border-[#326e51] shadow-md shadow-[#326e51]/20'
-                                    : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-                                }`}
+                                className={`w-9 h-9 rounded-xl font-bold text-xs border flex items-center justify-center transition-all ${meta.page === pageNum
+                                  ? 'bg-[#326e51] text-white border-[#326e51] shadow-md shadow-[#326e51]/20'
+                                  : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                                  }`}
                               >
                                 {pageNum}
                               </button>
@@ -838,7 +917,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.5 }}
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-8 right-8 w-12 h-12 bg-[#326e51] text-white rounded-full shadow-2xl flex items-center justify-center cursor-pointer z-50 hover:bg-[#25543d] transition-all border-4 border-white/20 backdrop-blur-sm"
+            className="fixed bottom-24 right-8 w-12 h-12 bg-[#326e51] text-white rounded-full shadow-2xl flex items-center justify-center cursor-pointer z-50 hover:bg-[#25543d] transition-all border-4 border-white/20 backdrop-blur-sm"
           >
             <ArrowUp size={24} />
           </motion.button>

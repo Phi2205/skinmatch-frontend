@@ -1,16 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Menu, X, User as UserIcon, LogOut, LayoutDashboard } from 'lucide-react';
+import { ShoppingBag, Menu, X, User as UserIcon, LogOut, LayoutDashboard, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/authContext';
 import { useCart } from '@/modules/cart/hooks/useCart';
+import { useRouter } from 'next/navigation';
 
 import { GlassCard } from './ui/glass-container';
 import { DarkGlassCard } from './ui/dark-glass-card';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const router = useRouter();
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
 
@@ -26,31 +30,102 @@ export function Header() {
   return (
     <div className="fixed top-4 left-0 right-0 z-50 px-4 flex justify-center">
       <GlassCard className="w-full max-w-6xl rounded-full px-6 py-2" variant="none">
-        <div className="flex justify-between items-center h-12">
+        <div className="flex justify-between items-center h-12 gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href="/" className="flex items-center gap-2 group shrink-0" onClick={() => setIsSearchOpen(false)}>
             <X className="w-6 h-6 text-[#9eb57a] rotate-45" />
             <span className="text-2xl font-semibold text-[#4a4a4a] tracking-tight">Liora</span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-10">
-            <Link href="/" className="text-sm font-bold text-gray-900 border-b-2 border-[#9eb57a] pb-0.5">
+            <Link href="/" className="text-sm font-bold text-gray-900 border-b-2 border-[#9eb57a] pb-0.5" onClick={() => setIsSearchOpen(false)}>
               Home
             </Link>
-            <Link href="/products" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition">
+            <Link href="/products" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition" onClick={() => setIsSearchOpen(false)}>
               Shop
             </Link>
-            <Link href="#services" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition">
+            <Link href="#services" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition" onClick={() => setIsSearchOpen(false)}>
               Services
             </Link>
-            <Link href="#about" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition">
+            <Link href="#about" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition" onClick={() => setIsSearchOpen(false)}>
               About us
             </Link>
           </nav>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Desktop Sliding Search */}
+            <div className="hidden md:flex items-center relative">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (searchTerm.trim()) {
+                    router.push(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
+                  }
+                }}
+                className={`relative flex items-center transition-all duration-300 ease-out bg-white border border-gray-100 shadow-sm rounded-full hover:bg-gray-50 ${
+                  isSearchOpen ? 'w-56 lg:w-64 h-10 px-3.5' : 'w-10 h-10 justify-center cursor-pointer'
+                }`}
+                onClick={() => {
+                  if (!isSearchOpen) {
+                    setIsSearchOpen(true);
+                  }
+                }}
+              >
+                {/* Search Icon / Submit Button */}
+                <button
+                  type={isSearchOpen ? 'submit' : 'button'}
+                  className={`flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors shrink-0 ${
+                    isSearchOpen ? 'mr-2' : ''
+                  }`}
+                  onClick={(e) => {
+                    if (!isSearchOpen) {
+                      e.preventDefault();
+                      setIsSearchOpen(true);
+                    } else if (!searchTerm.trim()) {
+                      e.preventDefault();
+                      setIsSearchOpen(false);
+                    }
+                  }}
+                  title="Search"
+                >
+                  <Search className="w-5 h-5" />
+                </button>
+
+                {/* Input Field */}
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`bg-transparent text-sm text-gray-800 placeholder-gray-400 focus:outline-none transition-all duration-300 ${
+                    isSearchOpen ? 'w-full opacity-100' : 'w-0 opacity-0 pointer-events-none'
+                  }`}
+                  style={{ visibility: isSearchOpen ? 'visible' : 'hidden' }}
+                  autoFocus={isSearchOpen}
+                />
+
+                {/* Close Button */}
+                {isSearchOpen && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (searchTerm) {
+                        setSearchTerm('');
+                      } else {
+                        setIsSearchOpen(false);
+                      }
+                    }}
+                    className="p-1 text-gray-400 hover:text-gray-600 rounded-full transition ml-1 shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </form>
+            </div>
+
             {/* Cart Button */}
             <Link
               href="/cart"
@@ -136,6 +211,27 @@ export function Header() {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <nav className="md:hidden py-4 border-t border-gray-100 mt-2 flex flex-col gap-4 items-center">
+            {/* Mobile Search input */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (searchTerm.trim()) {
+                  router.push(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
+                  setMobileMenuOpen(false);
+                }
+              }}
+              className="w-full px-4 relative mb-2"
+            >
+              <Search className="absolute left-7 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-white/60 border border-gray-200/80 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/50 focus:border-[#7a9e8e]"
+              />
+            </form>
+
             <Link href="/" className="text-sm font-bold text-gray-900" onClick={() => setMobileMenuOpen(false)}>
               Home
             </Link>
