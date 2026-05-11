@@ -88,11 +88,60 @@ export function FlashSale() {
     return (
       <section className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-[#7a9e8e]/10 rounded-3xl p-6 h-[420px] flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-10 h-10 text-[#7a9e8e] animate-spin" />
-              <p className="text-gray-500 font-semibold">Đang tải các ưu đãi Flash Sale...</p>
+          {/* Outer container styled in elegant brand green */}
+          <div className="bg-[#7a9e8e] rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+            
+            {/* Header Row Skeleton */}
+            <div className="flex justify-between items-center mb-6 animate-pulse">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <div className="h-7 w-36 bg-white/20 rounded-lg" />
+                
+                {/* Countdown Skeletons */}
+                <div className="flex items-center gap-1.5 sm:ml-2">
+                  <div className="h-6 w-8 bg-white/20 rounded" />
+                  <span className="text-white font-black text-sm">:</span>
+                  <div className="h-6 w-8 bg-white/20 rounded" />
+                  <span className="text-white font-black text-sm">:</span>
+                  <div className="h-6 w-8 bg-white/20 rounded" />
+                </div>
+              </div>
+
+              <div className="h-4 w-16 bg-white/20 rounded" />
             </div>
+
+            {/* Horizontal Scroll Track Skeleton */}
+            <div className="flex overflow-x-auto no-scrollbar gap-3.5 pb-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div 
+                  key={i}
+                  className="w-[calc(50%-7px)] sm:w-[calc(33.33%-10px)] md:w-[calc(25%-11px)] lg:w-[calc(20%-11px)] shrink-0 bg-white rounded-2xl p-3 h-[335px] flex flex-col justify-between animate-pulse"
+                >
+                  {/* Image Skeleton */}
+                  <div className="relative aspect-square bg-gray-100 rounded-xl" />
+
+                  {/* Info Skeleton */}
+                  <div className="mt-3 flex-1 flex flex-col justify-between">
+                    <div>
+                      {/* Price Skeleton */}
+                      <div className="flex gap-2">
+                        <div className="h-4 w-16 bg-gray-100 rounded" />
+                        <div className="h-3 w-10 bg-gray-100 rounded mt-1" />
+                      </div>
+
+                      {/* Title Skeletons */}
+                      <div className="space-y-2 mt-3">
+                        <div className="h-3.5 bg-gray-100 rounded w-full" />
+                        <div className="h-3.5 bg-gray-100 rounded w-4/5" />
+                      </div>
+                    </div>
+
+                    {/* Progress Bar Skeleton */}
+                    <div className="w-full h-4.5 bg-gray-100 rounded-full mt-4" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
           </div>
         </div>
       </section>

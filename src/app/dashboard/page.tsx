@@ -136,7 +136,7 @@ export default function DashboardPage() {
               />
             )}
 
-            {activeTab === 'wishlist' && <WishlistTab />}
+            {/* {activeTab === 'wishlist' && <WishlistTab />} */}
 
             {activeTab === 'settings' && <SettingsTab />}
           </div>

@@ -70,7 +70,7 @@ export function SettingsTab() {
 
       <div className="space-y-8">
         {/* Notifications */}
-        <div>
+        {/* <div>
           <h3 className="font-semibold text-gray-900 mb-4">
             Tùy chọn nhận thông báo
           </h3>
@@ -105,10 +105,10 @@ export function SettingsTab() {
               </span>
             </label>
           </div>
-        </div>
+        </div> */}
 
         {/* Skin Profile */}
-        <div className="pt-6 border-t border-[#e8e5dd]">
+        {/* <div className="pt-6 border-t border-[#e8e5dd]">
           <h3 className="font-semibold text-gray-900 mb-4">
             Hồ sơ làn da của bạn (Skin Profile)
           </h3>
@@ -119,7 +119,7 @@ export function SettingsTab() {
           >
             Cập nhật Skin Profile
           </Link>
-        </div>
+        </div> */}
 
         {/* Change Password */}
         <div className="pt-6 border-t border-[#e8e5dd]">
