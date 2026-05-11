@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/authContext';
 import { Message, RecommendedProduct } from '../types';
 import { toast } from 'sonner';
+import { getChatHistory, askChatbotStream, deleteChatHistory } from '../services/chatbot.service';
 
 export function useChatbot() {
   const { user, isAuthenticated } = useAuth();
@@ -21,7 +22,7 @@ export function useChatbot() {
   // Initialize or fetch Session ID
   useEffect(() => {
     if (isAuthenticated && user) {
-      setSessionId(`user-session-${user.id}`);
+      setSessionId(`user-${user.id}-session`);
     } else {
       const cachedGuestSession = localStorage.getItem('skinmatch_guest_session_id');
       if (cachedGuestSession) {
@@ -34,46 +35,67 @@ export function useChatbot() {
     }
   }, [user, isAuthenticated]);
 
+  // Fetch chat history from backend database (authenticated users only)
+  const fetchChatHistory = useCallback(async () => {
+    if (!sessionId || !isAuthenticated) return;
+    
+    try {
+      setIsLoading(true);
+      const data = await getChatHistory(sessionId);
+      if (data?.success && Array.isArray(data?.data)) {
+        const mappedMessages: Message[] = data.data.map((msg: any, idx: number) => ({
+          id: msg.id || `${msg.role}-${idx}-${Date.now()}`,
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp || new Date().toISOString(),
+          products: msg.products || []
+        }));
+
+        if (mappedMessages.length > 0) {
+          setMessages(mappedMessages);
+        }
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy lịch sử chat từ máy chủ:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [sessionId, isAuthenticated]);
+
   // Load chat history from backend if available on mount/session change
   useEffect(() => {
     if (!sessionId) return;
 
-    // We can also let the chatbot component fetch initial historical messages from redis, 
-    // but since the backend currently doesn't have an endpoint for fetching history separately 
-    // (it only manages it via redis), we can load the cached chat history from localStorage 
-    // for seamless offline-first experience, and let backend manage context internally.
-    const cachedHistory = localStorage.getItem(`skinmatch_chat_history_${sessionId}`);
-    if (cachedHistory) {
-      try {
-        setMessages(JSON.parse(cachedHistory));
-      } catch (e) {
-        setMessages([]);
+    // Set initial welcome message
+    setMessages([
+      {
+        id: 'welcome',
+        role: 'assistant',
+        content: 'Xin chào! Mình là **SkinMatch AI Expert** - Chuyên gia tư vấn da liễu và mỹ phẩm của SkinMatch. Rất vui được hỗ trợ bạn! Hôm nay làn da của bạn đang cần mình tư vấn vấn đề gì thế nhỉ?',
+        timestamp: new Date().toISOString(),
+        products: []
       }
-    } else {
-      // Set initial welcome message
-      setMessages([
-        {
-          id: 'welcome',
-          role: 'assistant',
-          content: 'Xin chào! Mình là **SkinMatch AI Expert** - Chuyên gia tư vấn da liễu và mỹ phẩm của SkinMatch. Rất vui được hỗ trợ bạn! Hôm nay làn da của bạn đang cần mình tư vấn vấn đề gì thế nhỉ?',
-          timestamp: new Date().toISOString(),
-          products: []
-        }
-      ]);
-    }
-  }, [sessionId]);
+    ]);
 
-  // Persist messages locally as well
-  const saveLocalHistory = useCallback((msgs: Message[]) => {
-    if (sessionId) {
-      localStorage.setItem(`skinmatch_chat_history_${sessionId}`, JSON.stringify(msgs));
+    // Synchronize history from database/redis if user is logged in and sessionId is aligned
+    if (isAuthenticated && sessionId.startsWith(`user-${user?.id}`)) {
+      fetchChatHistory();
     }
-  }, [sessionId]);
+  }, [sessionId, isAuthenticated, user, fetchChatHistory]);
 
-  const clearChat = useCallback(() => {
+  const clearChat = useCallback(async () => {
     if (isStreamingRef.current) {
       toast.warning('Đang nhận phản hồi, không thể xóa lúc này.');
       return;
+    }
+
+    // Call API to delete chat history on backend
+    if (sessionId) {
+      try {
+        await deleteChatHistory(sessionId);
+      } catch (error) {
+        console.error('Lỗi khi xóa lịch sử trò chuyện trên máy chủ:', error);
+      }
     }
 
     const initialWelcome: Message = {
@@ -87,11 +109,7 @@ export function useChatbot() {
     setMessages([initialWelcome]);
     setStreamingContent('');
     setStreamingProducts([]);
-    
-    if (sessionId) {
-      localStorage.removeItem(`skinmatch_chat_history_${sessionId}`);
-    }
-    
+
     // Generate a fresh guest session ID if not authenticated
     if (!isAuthenticated) {
       const newGuestSession = `guest-session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -119,7 +137,6 @@ export function useChatbot() {
 
     const updatedMsgs = [...messages, userMessage];
     setMessages(updatedMsgs);
-    saveLocalHistory(updatedMsgs);
 
     // Prepare streaming state
     setIsLoading(true);
@@ -128,15 +145,8 @@ export function useChatbot() {
     isStreamingRef.current = true;
 
     try {
-      // Fetch stream from backend
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/chatbot/ask-stream`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: textToSend,
-          sessionId: sessionId || 'phien-chat-hien-tai'
-        })
-      });
+      // Fetch stream from backend using chatbot service
+      const response = await askChatbotStream(textToSend, sessionId || 'phien-chat-hien-tai');
 
       if (!response.ok) {
         throw new Error(`Lỗi kết nối máy chủ (${response.status})`);
@@ -159,7 +169,7 @@ export function useChatbot() {
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
-        
+
         // Keep partial line in buffer
         buffer = lines.pop() || '';
 
@@ -203,12 +213,11 @@ export function useChatbot() {
 
       const finalMsgs = [...updatedMsgs, finalAssistantMessage];
       setMessages(finalMsgs);
-      saveLocalHistory(finalMsgs);
 
     } catch (error: any) {
       console.error('Lỗi nhận luồng stream:', error);
       toast.error(error.message || 'Lỗi nhận kết nối từ Chatbot, vui lòng thử lại!');
-      
+
       // Put a fallback message
       const assistantMsgId = `assistant-error-${Date.now()}`;
       const errorMsg: Message = {
@@ -219,14 +228,13 @@ export function useChatbot() {
       };
       const errorMsgs = [...updatedMsgs, errorMsg];
       setMessages(errorMsgs);
-      saveLocalHistory(errorMsgs);
     } finally {
       setIsLoading(false);
       setStreamingContent('');
       setStreamingProducts([]);
       isStreamingRef.current = false;
     }
-  }, [input, isLoading, messages, sessionId, saveLocalHistory]);
+  }, [input, isLoading, messages, sessionId]);
 
   return {
     messages,
