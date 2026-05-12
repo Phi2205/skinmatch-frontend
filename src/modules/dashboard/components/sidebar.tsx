@@ -7,6 +7,7 @@ interface UserData {
   email: string;
   name: string;
   role?: string;
+  avatar_url?: string;
 }
 
 interface SidebarProps {
@@ -21,11 +22,19 @@ export function Sidebar({ user, activeTab, setActiveTab, onLogout }: SidebarProp
     <div className="bg-white rounded-lg p-6 border border-[#e8e5dd]">
       {/* User Info */}
       <div className="text-center mb-6 pb-6 border-b border-[#e8e5dd]">
-        <div className="w-16 h-16 bg-[#7a9e8e] rounded-full flex items-center justify-center mx-auto mb-4">
-          <User className="w-8 h-8 text-white" />
+        <div className="w-16 h-16 bg-[#7a9e8e] rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden shadow-sm border border-gray-100">
+          {user.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt={user.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <User className="w-8 h-8 text-white" />
+          )}
         </div>
         <h3 className="font-semibold text-gray-900">{user.name}</h3>
-        <p className="text-sm text-gray-600">{user.email}</p>
+        {/* <p className="text-sm text-gray-600">{user.email}</p> */}
       </div>
 
       {/* Navigation */}
@@ -56,7 +65,7 @@ export function Sidebar({ user, activeTab, setActiveTab, onLogout }: SidebarProp
             <span>Orders</span>
           </div>
         </button>
-        <button
+        {/* <button
           onClick={() => setActiveTab('wishlist')}
           className={`w-full text-left px-4 py-3 rounded-lg transition cursor-pointer ${
             activeTab === 'wishlist'
@@ -68,7 +77,7 @@ export function Sidebar({ user, activeTab, setActiveTab, onLogout }: SidebarProp
             <Heart className="w-5 h-5" />
             <span>Wishlist</span>
           </div>
-        </button>
+        </button> */}
         <button
           onClick={() => setActiveTab('settings')}
           className={`w-full text-left px-4 py-3 rounded-lg transition cursor-pointer ${

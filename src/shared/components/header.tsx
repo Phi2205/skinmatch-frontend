@@ -5,7 +5,7 @@ import { ShoppingBag, Menu, X, User as UserIcon, LogOut, LayoutDashboard, Search
 import { useState } from 'react';
 import { useAuth } from '@/contexts/authContext';
 import { useCart } from '@/modules/cart/hooks/useCart';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 import { GlassCard } from './ui/glass-container';
 import { DarkGlassCard } from './ui/dark-glass-card';
@@ -15,6 +15,7 @@ export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
 
@@ -39,16 +40,48 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-10">
-            <Link href="/" className="text-sm font-bold text-gray-900 border-b-2 border-[#9eb57a] pb-0.5" onClick={() => setIsSearchOpen(false)}>
+            <Link 
+              href="/" 
+              className={`text-sm transition pb-0.5 ${
+                pathname === '/' 
+                  ? 'font-bold text-gray-900 border-b-2 border-[#9eb57a]' 
+                  : 'font-medium text-gray-500 hover:text-gray-900'
+              }`} 
+              onClick={() => setIsSearchOpen(false)}
+            >
               Home
             </Link>
-            <Link href="/products" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition" onClick={() => setIsSearchOpen(false)}>
-              Shop
+            <Link 
+              href="/products" 
+              className={`text-sm transition pb-0.5 ${
+                pathname.startsWith('/products') 
+                  ? 'font-bold text-gray-900 border-b-2 border-[#9eb57a]' 
+                  : 'font-medium text-gray-500 hover:text-gray-900'
+              }`} 
+              onClick={() => setIsSearchOpen(false)}
+            >
+              Products
             </Link>
-            <Link href="#services" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition" onClick={() => setIsSearchOpen(false)}>
-              Services
+            <Link 
+              href="/flash-sales" 
+              className={`text-sm transition pb-0.5 ${
+                pathname.startsWith('/flash-sales') 
+                  ? 'font-bold text-gray-900 border-b-2 border-[#9eb57a]' 
+                  : 'font-medium text-gray-500 hover:text-gray-900'
+              }`} 
+              onClick={() => setIsSearchOpen(false)}
+            >
+              Flash Sale
             </Link>
-            <Link href="#about" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition" onClick={() => setIsSearchOpen(false)}>
+            <Link 
+              href="/about" 
+              className={`text-sm transition pb-0.5 ${
+                pathname === '/about' 
+                  ? 'font-bold text-gray-900 border-b-2 border-[#9eb57a]' 
+                  : 'font-medium text-gray-500 hover:text-gray-900'
+              }`} 
+              onClick={() => setIsSearchOpen(false)}
+            >
               About us
             </Link>
           </nav>
@@ -141,8 +174,16 @@ export function Header() {
             <div className="relative group ml-1">
               {user ? (
                 <div className="flex items-center gap-2">
-                  <button className="w-10 h-10 rounded-full bg-[#7a9e8e] flex items-center justify-center text-white font-bold shadow-sm border-2 border-white hover:scale-105 transition">
-                    {user.name?.charAt(0).toUpperCase() || 'U'}
+                  <button className="w-10 h-10 rounded-full bg-[#7a9e8e] flex items-center justify-center text-white font-bold shadow-sm border-2 border-white hover:scale-105 transition overflow-hidden">
+                    {user.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      user.name?.charAt(0).toUpperCase() || 'U'
+                    )}
                   </button>
 
                   {/* Dropdown Menu */}
@@ -232,16 +273,48 @@ export function Header() {
               />
             </form>
 
-            <Link href="/" className="text-sm font-bold text-gray-900" onClick={() => setMobileMenuOpen(false)}>
+            <Link 
+              href="/" 
+              className={`text-sm transition ${
+                pathname === '/' 
+                  ? 'font-bold text-[#7a9e8e]' 
+                  : 'font-medium text-gray-500'
+              }`} 
+              onClick={() => setMobileMenuOpen(false)}
+            >
               Home
             </Link>
-            <Link href="/products" className="text-sm font-medium text-gray-500" onClick={() => setMobileMenuOpen(false)}>
-              Shop
+            <Link 
+              href="/products" 
+              className={`text-sm transition ${
+                pathname.startsWith('/products') 
+                  ? 'font-bold text-[#7a9e8e]' 
+                  : 'font-medium text-gray-500'
+              }`} 
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Products
             </Link>
-            <Link href="#services" className="text-sm font-medium text-gray-500" onClick={() => setMobileMenuOpen(false)}>
-              Services
+            <Link 
+              href="/flash-sales" 
+              className={`text-sm transition ${
+                pathname.startsWith('/flash-sales') 
+                  ? 'font-bold text-[#7a9e8e]' 
+                  : 'font-medium text-gray-500'
+              }`} 
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Flash Sale
             </Link>
-            <Link href="#about" className="text-sm font-medium text-gray-500" onClick={() => setMobileMenuOpen(false)}>
+            <Link 
+              href="/about" 
+              className={`text-sm transition ${
+                pathname === '/about' 
+                  ? 'font-bold text-[#7a9e8e]' 
+                  : 'font-medium text-gray-500'
+              }`} 
+              onClick={() => setMobileMenuOpen(false)}
+            >
               About us
             </Link>
           </nav>

@@ -27,11 +27,14 @@ export async function createFlashSaleCampaign(
 /**
  * Lấy danh sách các chiến dịch Flash Sale đang diễn ra trong khung giờ hiện tại
  */
-export async function getActiveFlashSales(): Promise<ApiResponse<FlashSaleCampaign[]>> {
+export async function getActiveFlashSales(params?: {
+  page?: number;
+  limit?: number;
+}): Promise<ApiResponse<FlashSaleCampaign[] | { items: FlashSaleCampaign[]; meta: any }>> {
   try {
-    const response = await axiosInstance.get<ApiResponse<FlashSaleCampaign[]>>(
-      "/flash-sales/active"
-    );
+    const response = await axiosInstance.get<
+      ApiResponse<FlashSaleCampaign[] | { items: FlashSaleCampaign[]; meta: any }>
+    >("/flash-sales/active", { params });
     return response.data;
   } catch (error) {
     console.error("Error fetching active flash sales:", error);

@@ -100,6 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await logoutApi();
             setUser(null);
             removeItem('user');
+            removeItem('cart');
+            removeItem('skinmatch_guest_session_id');
 
             // Redirect to login page
             router.push('/login');

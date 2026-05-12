@@ -27,7 +27,7 @@ export function BestSellers() {
 
   const { data: bestSellersResponse, isLoading, isFetching } = useQuery({
     queryKey: ['products', 'best-seller', page],
-    queryFn: () => getProductsByBadgeSlug('best-seller', page, 4),
+    queryFn: () => getProductsByBadgeSlug('best-seller', page, 8),
   });
 
   // Synchronous state synchronization during render to completely eliminate transition lag
@@ -69,7 +69,7 @@ export function BestSellers() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {accumulatedProducts.length === 0 && isLoading ? (
           // Initial Loading Skeletons
-          Array.from({ length: 4 }).map((_, i) => (
+          Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="bg-white rounded-3xl overflow-hidden border border-gray-100 p-5 space-y-4 animate-pulse shadow-sm">
               <div className="aspect-square bg-gray-100 rounded-2xl w-full" />
               <div className="space-y-3">
@@ -211,7 +211,7 @@ export function BestSellers() {
 
         {/* Skeletons while loading more items */}
         {isFetching && page > 1 && (
-          Array.from({ length: 4 }).map((_, i) => (
+          Array.from({ length: 8 }).map((_, i) => (
             <div key={`more-skeleton-${i}`} className="bg-white rounded-3xl overflow-hidden border border-gray-100 p-5 space-y-4 animate-pulse shadow-sm">
               <div className="aspect-square bg-gray-100 rounded-2xl w-full" />
               <div className="space-y-3">

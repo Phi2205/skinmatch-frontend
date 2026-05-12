@@ -74,7 +74,7 @@ export function Hero() {
         </div>
 
         {/* Main Content Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end relative">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end relativev mt-20">
           {/* Center: Woman Image */}
           <div className="md:col-span-6 order-1 md:order-2 flex flex-col items-center relative -mt-5 translate-x-1/2 z-20">
             <motion.div

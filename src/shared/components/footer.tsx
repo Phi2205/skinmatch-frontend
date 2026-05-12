@@ -12,7 +12,7 @@ export function Footer() {
               <div className="w-8 h-8 bg-[#7a9e8e] rounded-sm flex items-center justify-center">
                 <span className="text-white font-bold">✕</span>
               </div>
-              <span className="text-lg font-bold">Silvor Care</span>
+              <span className="text-lg font-bold">Liora Care</span>
             </div>
             <p className="text-sm text-gray-400">
               Pure care, powered by nature. Cruelty-free & eco-conscious skincare for everyone.
@@ -104,7 +104,7 @@ export function Footer() {
         {/* Bottom Section */}
         <div className="border-t border-gray-700 pt-6 flex flex-col sm:flex-row justify-between items-center">
           <p className="text-sm text-gray-400">
-            &copy; 2024 Silvor Care. All rights reserved.
+            &copy; 2024 Liora Care. All rights reserved.
           </p>
           <div className="flex gap-4 mt-4 sm:mt-0">
             <a href="#" className="text-gray-400 hover:text-[#7a9e8e] transition">
