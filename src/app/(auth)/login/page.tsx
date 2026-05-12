@@ -45,7 +45,7 @@ export default function LoginPage() {
                 Welcome Back
               </h1>
               <p className="text-gray-600">
-                Sign in to your Silvor Care account
+                Sign in to your Liora Care account
               </p>
             </div>
 

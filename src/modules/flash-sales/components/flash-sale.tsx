@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ShoppingBag, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getActiveFlashSales } from '../services/flash-sale.service';
+import { FlashSaleCampaign, FlashSaleItem } from '../types/flash-sale.type';
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -21,13 +22,16 @@ export function FlashSale() {
   // Fetch active flash sale campaign
   const { data: flashSalesResponse, isLoading } = useQuery({
     queryKey: ['activeFlashSales'],
-    queryFn: getActiveFlashSales,
+    queryFn: () => getActiveFlashSales(),
   });
 
-  const campaigns = flashSalesResponse?.data || [];
+  const isPaginated = flashSalesResponse?.data && !Array.isArray(flashSalesResponse.data);
+  const campaigns: FlashSaleCampaign[] = isPaginated
+    ? (flashSalesResponse?.data as any).items || []
+    : (flashSalesResponse?.data as any) || [];
   // Use the first active campaign
   const campaign = campaigns[0];
-  const flashSaleItems = campaign?.items || [];
+  const flashSaleItems: FlashSaleItem[] = campaign?.items || [];
 
   // Group items by product_id, keeping only the variant with the minimum sale_price
   const displayItems = Object.values(
@@ -90,12 +94,12 @@ export function FlashSale() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Outer container styled in elegant brand green */}
           <div className="bg-[#7a9e8e] rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
-            
+
             {/* Header Row Skeleton */}
             <div className="flex justify-between items-center mb-6 animate-pulse">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                 <div className="h-7 w-36 bg-white/20 rounded-lg" />
-                
+
                 {/* Countdown Skeletons */}
                 <div className="flex items-center gap-1.5 sm:ml-2">
                   <div className="h-6 w-8 bg-white/20 rounded" />
@@ -112,7 +116,7 @@ export function FlashSale() {
             {/* Horizontal Scroll Track Skeleton */}
             <div className="flex overflow-x-auto no-scrollbar gap-3.5 pb-1">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div 
+                <div
                   key={i}
                   className="w-[calc(50%-7px)] sm:w-[calc(33.33%-10px)] md:w-[calc(25%-11px)] lg:w-[calc(20%-11px)] shrink-0 bg-white rounded-2xl p-3 h-[335px] flex flex-col justify-between animate-pulse"
                 >
@@ -156,17 +160,17 @@ export function FlashSale() {
   return (
     <section className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Outer container styled in elegant brand green */}
         <div className="bg-[#7a9e8e] rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
-          
+
           {/* Header Row */}
           <div className="flex justify-between items-center mb-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
               <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider">
                 {campaign.title || 'Flash deals'}
               </h2>
-              
+
               {/* Digit Countdown Timer */}
               <div className="flex items-center gap-1.5 sm:ml-2">
                 <span className="bg-black text-white text-xs sm:text-sm font-extrabold px-2 py-1 rounded min-w-[26px] text-center shadow-inner">
@@ -183,8 +187,8 @@ export function FlashSale() {
               </div>
             </div>
 
-            <Link 
-              href="/flash-sales" 
+            <Link
+              href="/flash-sales"
               className="text-white text-xs sm:text-sm font-bold hover:underline tracking-tight opacity-95 hover:opacity-100 transition whitespace-nowrap"
             >
               Xem tất cả
@@ -193,10 +197,10 @@ export function FlashSale() {
 
           {/* Slider Container Wrapper */}
           <div className="relative group/slider">
-            
+
             {/* Left Navigation Arrow */}
             {displayItems.length > 0 && (
-              <button 
+              <button
                 onClick={() => scroll('left')}
                 className="absolute -left-3 sm:-left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white text-[#7a9e8e] hover:text-[#5a7a6b] shadow-xl flex items-center justify-center transition-all opacity-0 group-hover/slider:opacity-100 duration-200 cursor-pointer border border-gray-100 hover:scale-105"
                 aria-label="Scroll left"
@@ -206,7 +210,7 @@ export function FlashSale() {
             )}
 
             {/* Horizontal Scroll Track */}
-            <div 
+            <div
               ref={scrollRef}
               className="flex overflow-x-auto no-scrollbar gap-3.5 pb-1 scroll-smooth snap-x snap-mandatory"
             >
@@ -219,21 +223,21 @@ export function FlashSale() {
 
                 // Sales progress indicators for UX
                 const itemsTotal = item.variants?.stock || 20;
-                const itemsSold = (item.id % 8) + 3;
-                const percentSold = Math.min(Math.round((itemsSold / itemsTotal) * 100), 95);
+                // const itemsSold = (item.id % 8) + 3;
+                // const percentSold = Math.min(Math.round((itemsSold / itemsTotal) * 100), 95);
 
                 return (
-                  <Link 
-                    key={item.id} 
-                    href={`/products/${product.slug}`} 
+                  <Link
+                    key={item.id}
+                    href={`/products/${product.slug}`}
                     className="group block w-[calc(50%-7px)] sm:w-[calc(33.33%-10px)] md:w-[calc(25%-11px)] lg:w-[calc(20%-11px)] shrink-0 snap-start"
                   >
                     <div className="bg-white rounded-2xl hover:shadow-xl hover:-translate-y-1 transition duration-300 p-3 h-[335px] flex flex-col justify-between">
-                      
+
                       {/* Product Image Panel */}
                       <div className="relative aspect-square bg-gray-50 rounded-xl overflow-hidden flex-shrink-0">
                         {/* Discount Banner Top-Right */}
-                        <div className="absolute top-1 right-1 z-10 bg-gradient-to-r from-orange-500 to-[#e05243] text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow">
+                        <div className="absolute top-1 right-1 z-10 bg-gradient-to-r from-[#7a9e8e] to-[#326e51] text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow">
                           -{discountPercentage}%
                         </div>
 
@@ -261,7 +265,7 @@ export function FlashSale() {
                         <div>
                           {/* Price Row */}
                           <div className="flex items-baseline flex-wrap gap-1">
-                            <span className="text-[#e05243] font-black text-sm sm:text-[15px]">
+                            <span className="text-[#326e51] font-black text-sm sm:text-[15px]">
                               {formatPrice(item.sale_price)}
                             </span>
                             <span className="text-gray-400 line-through text-[10px] sm:text-xs">
@@ -276,17 +280,17 @@ export function FlashSale() {
                         </div>
 
                         {/* Progress Bar */}
-                        <div className="w-full mt-3">
-                          <div className="w-full h-4.5 bg-orange-100 rounded-full relative overflow-hidden shadow-inner flex items-center justify-center">
+                        {/* <div className="w-full mt-3">
+                            <div className="w-full h-4.5 bg-[#eef5f1] rounded-full relative overflow-hidden shadow-inner flex items-center justify-center">
                             <div 
-                              className="h-full bg-gradient-to-r from-orange-400 to-[#e05243] absolute left-0 top-0 rounded-full transition-all duration-500"
+                              className="h-full bg-gradient-to-r from-[#7a9e8e] to-[#326e51] absolute left-0 top-0 rounded-full transition-all duration-500"
                               style={{ width: `${percentSold}%` }}
                             />
                             <span className="relative z-10 text-[9px] sm:text-[10px] font-black text-white text-center">
                               {percentSold >= 80 ? `Sắp cháy hàng ${percentSold}%` : `Đã bán ${percentSold}%`}
                             </span>
                           </div>
-                        </div>
+                        </div> */}
 
                       </div>
                     </div>
@@ -297,7 +301,7 @@ export function FlashSale() {
 
             {/* Right Navigation Arrow */}
             {displayItems.length > 0 && (
-              <button 
+              <button
                 onClick={() => scroll('right')}
                 className="absolute -right-3 sm:-right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white text-[#7a9e8e] hover:text-[#5a7a6b] shadow-xl flex items-center justify-center transition-all opacity-0 group-hover/slider:opacity-100 duration-200 cursor-pointer border border-gray-100 hover:scale-105"
                 aria-label="Scroll right"
@@ -307,7 +311,8 @@ export function FlashSale() {
             )}
 
             {/* Cross-browser style tag to hide standard scrollbar lines cleanly */}
-            <style dangerouslySetInnerHTML={{__html: `
+            <style dangerouslySetInnerHTML={{
+              __html: `
               .no-scrollbar::-webkit-scrollbar {
                 display: none;
               }

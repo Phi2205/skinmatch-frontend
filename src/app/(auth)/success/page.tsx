@@ -1,22 +1,26 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/authContext';
-import { refresh } from '@/modules/auth/services/auth.service';
+import { axiosInstance } from '@/services/axiosInstance';
 import { toast } from 'sonner';
 
 function AuthSuccessHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { updateUser } = useAuth();
+  const calledRef = useRef(false);
 
   useEffect(() => {
+    if (calledRef.current) return;
+    calledRef.current = true;
+
     const handleSuccess = async () => {
       try {
-        const response = await refresh();
-        if (response && response.success && response.data?.user) {
-          const userData = response.data.user;
+        const response = await axiosInstance.get('/auth/me');
+        if (response && response.data?.success && response.data?.data) {
+          const userData = response.data.data;
           updateUser(userData);
           toast.success('Đăng nhập bằng Google thành công!');
           

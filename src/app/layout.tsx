@@ -12,7 +12,7 @@ const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Silvor Care - Natural Skincare for Everyone',
+  title: 'Liora Care - Natural Skincare for Everyone',
   description: 'Discover pure, natural skincare products powered by nature. Shop our collection of serums, moisturizers, and treatments for all skin types.',
   generator: 'v0.app',
   icons: {

@@ -7,7 +7,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Silvor Care design system - Sage green & cream palette
+        // Liora Care design system - Sage green & cream palette
         'sage-dark': '#5a7a6b',
         'sage': '#7a9e8e',
         'sage-light': '#a8bfb5',

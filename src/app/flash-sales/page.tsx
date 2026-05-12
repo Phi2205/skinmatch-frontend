@@ -8,27 +8,33 @@ import { getActiveFlashSales } from '@/modules/flash-sales/services/flash-sale.s
 import Link from 'next/link';
 import Image from 'next/image';
 import { Zap, Loader2, Calendar, ShoppingBag, Clock, Sparkles } from 'lucide-react';
+import { FlashSaleCampaign, FlashSaleItem } from '@/modules/flash-sales/types/flash-sale.type';
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 };
 
 export default function FlashSalesLandingPage() {
+  const [page, setPage] = useState(1);
+  const limit = 8;
   const [timeLeft, setTimeLeft] = useState({
     hours: 0,
     minutes: 0,
     seconds: 0,
   });
 
-  // Fetch active campaigns
+  // Fetch active campaigns with pagination
   const { data: flashSalesResponse, isLoading } = useQuery({
-    queryKey: ['activeFlashSales'],
-    queryFn: getActiveFlashSales,
+    queryKey: ['activeFlashSales', page, limit],
+    queryFn: () => getActiveFlashSales({ page, limit }),
   });
 
-  const campaigns = flashSalesResponse?.data || [];
+  const isPaginated = flashSalesResponse?.data && !Array.isArray(flashSalesResponse.data);
+  const campaigns: FlashSaleCampaign[] = isPaginated
+    ? (flashSalesResponse?.data as any).items || []
+    : (flashSalesResponse?.data as any) || [];
   const campaign = campaigns[0];
-  const flashSaleItems = campaign?.items || [];
+  const flashSaleItems: FlashSaleItem[] = campaign?.items || [];
 
   // Group items by product_id, keeping only the variant with the minimum sale_price
   const displayItems = Object.values(
@@ -110,7 +116,7 @@ export default function FlashSalesLandingPage() {
                   {campaign.title}
                 </h1>
                 <p className="text-white/80 text-sm sm:text-base leading-relaxed">
-                  Cơ hội mua sắm các sản phẩm chăm sóc da cao cấp của Silvor với mức giá giảm sâu chớp nhoáng độc quyền trong hôm nay!
+                  Cơ hội mua sắm các sản phẩm chăm sóc da cao cấp của Liora với mức giá giảm sâu chớp nhoáng độc quyền trong hôm nay!
                 </p>
               </div>
 
@@ -167,7 +173,7 @@ export default function FlashSalesLandingPage() {
                     {/* Product Image Area */}
                     <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
                       {/* Percent Tag */}
-                      <span className="absolute top-2 right-2 z-10 bg-gradient-to-r from-orange-500 to-[#e05243] text-white text-xs font-black px-2 py-0.5 rounded shadow">
+                      <span className="absolute top-2 right-2 z-10 bg-gradient-to-r from-[#7a9e8e] to-[#326e51] text-white text-xs font-black px-2 py-0.5 rounded shadow">
                         -{discountPercentage}%
                       </span>
                       {/* Brand Label */}
@@ -194,7 +200,7 @@ export default function FlashSalesLandingPage() {
                       <div>
                         {/* Prices */}
                         <div className="flex items-baseline gap-2">
-                          <span className="text-[#e05243] text-base sm:text-lg font-black">
+                          <span className="text-[#326e51] text-base sm:text-lg font-black">
                             {formatPrice(item.sale_price)}
                           </span>
                           <span className="text-gray-400 line-through text-xs sm:text-sm">
@@ -210,17 +216,17 @@ export default function FlashSalesLandingPage() {
 
                       {/* Progress Bar & CTA */}
                       <div className="mt-4 space-y-3">
-                        <div className="w-full">
-                          <div className="w-full h-5 bg-orange-100 rounded-full relative overflow-hidden shadow-inner flex items-center justify-center">
+                        {/* <div className="w-full">
+                          <div className="w-full h-5 bg-[#eef5f1] rounded-full relative overflow-hidden shadow-inner flex items-center justify-center">
                             <div 
-                              className="h-full bg-gradient-to-r from-orange-400 to-[#e05243] absolute left-0 top-0 rounded-full transition-all duration-500"
+                              className="h-full bg-gradient-to-r from-[#7a9e8e] to-[#326e51] absolute left-0 top-0 rounded-full transition-all duration-500"
                               style={{ width: `${progressWidth}%` }}
                             />
                             <span className="relative z-10 text-[10px] font-black text-white">
                               {progressWidth >= 80 ? `Sắp cháy hàng ${progressWidth}%` : `Đã bán ${progressWidth}%`}
                             </span>
                           </div>
-                        </div>
+                        </div> */}
 
                         <button 
                           className="w-full py-2 bg-[#7a9e8e] hover:bg-[#5a7a6b] text-white text-xs font-extrabold uppercase rounded-xl transition shadow-md shadow-[#7a9e8e]/10 group-hover:shadow-lg cursor-pointer"
@@ -233,6 +239,29 @@ export default function FlashSalesLandingPage() {
                 );
               })}
             </div>
+
+            {/* Pagination Controls */}
+            {isPaginated && (flashSalesResponse?.data as any).meta?.totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-12">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 border border-[#e8e5dd] rounded-xl text-sm font-semibold bg-white text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
+                >
+                  Trước
+                </button>
+                <span className="text-sm font-bold text-gray-600 px-3">
+                  Trang {page} / {(flashSalesResponse?.data as any).meta?.totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min((flashSalesResponse?.data as any).meta?.totalPages, p + 1))}
+                  disabled={page === (flashSalesResponse?.data as any).meta?.totalPages}
+                  className="px-4 py-2 border border-[#e8e5dd] rounded-xl text-sm font-semibold bg-white text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
+                >
+                  Sau
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>

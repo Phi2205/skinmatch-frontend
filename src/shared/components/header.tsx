@@ -62,8 +62,16 @@ export function Header() {
             >
               Products
             </Link>
-            <Link href="#services" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition" onClick={() => setIsSearchOpen(false)}>
-              Services
+            <Link 
+              href="/flash-sales" 
+              className={`text-sm transition pb-0.5 ${
+                pathname.startsWith('/flash-sales') 
+                  ? 'font-bold text-gray-900 border-b-2 border-[#9eb57a]' 
+                  : 'font-medium text-gray-500 hover:text-gray-900'
+              }`} 
+              onClick={() => setIsSearchOpen(false)}
+            >
+              Flash Sale
             </Link>
             <Link 
               href="/about" 
@@ -287,8 +295,16 @@ export function Header() {
             >
               Products
             </Link>
-            <Link href="#services" className="text-sm font-medium text-gray-500" onClick={() => setMobileMenuOpen(false)}>
-              Services
+            <Link 
+              href="/flash-sales" 
+              className={`text-sm transition ${
+                pathname.startsWith('/flash-sales') 
+                  ? 'font-bold text-[#7a9e8e]' 
+                  : 'font-medium text-gray-500'
+              }`} 
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Flash Sale
             </Link>
             <Link 
               href="/about" 

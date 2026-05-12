@@ -97,7 +97,7 @@ function ProductsContent() {
     queryKey: ['products', debouncedSearchTerm, selectedCategory, selectedSkinTypes, selectedConcerns, priceRange, sortBy, page],
     queryFn: () => getProducts({
       page,
-      limit: 8, // Set limit to 8 for neat grid pages
+      limit: 16, // Set limit to 16 for neat grid pages
       search: debouncedSearchTerm,
       category_ids: selectedCategory === 'All' ? undefined : selectedCategory.toString(),
       skin_type_ids: selectedSkinTypes.length > 0 ? selectedSkinTypes.join(',') : undefined,
@@ -360,7 +360,7 @@ function ProductsContent() {
             {/* Products */}
             {isLoading && filteredProducts.length === 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, i) => (
+                {[...Array(16)].map((_, i) => (
                   <ProductCardSkeleton key={`initial-skeleton-${i}`} />
                 ))}
               </div>
@@ -456,7 +456,7 @@ function ProductsContent() {
 
                   {/* Append skeletons at the bottom of the grid when loading more pages */}
                   {isFetching && (
-                    Array.from({ length: 4 }).map((_, i) => (
+                    Array.from({ length: 8 }).map((_, i) => (
                       <ProductCardSkeleton key={`more-skeleton-${i}`} />
                     ))
                   )}
