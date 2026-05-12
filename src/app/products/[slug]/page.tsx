@@ -4,7 +4,7 @@ import { Header } from '@/shared/components/header';
 import { Footer } from '@/shared/components/footer';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect, useRef, use, useMemo } from 'react';
+import { useState, useEffect, useRef, use, useMemo, Suspense } from 'react';
 import {
   Heart,
   Share2,
@@ -31,6 +31,8 @@ import { ProductSkeleton } from '@/modules/product/components/product-skeleton';
 import { useCart } from '@/modules/cart/hooks/useCart';
 import { toast } from 'sonner';
 import { CheckoutModal } from '@/modules/orders/components/checkout-modal';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/contexts/authContext';
 
 // Extended Mock Data to match Hasaki details
 const MOCK_PRODUCT = {
@@ -76,8 +78,11 @@ const SECTIONS = [
   { id: 'reviews', label: 'Đánh giá' }
 ];
 
-export default function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+function ProductContentComponent({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const searchParams = useSearchParams();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
@@ -88,6 +93,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const { data: productResponse, isLoading, error } = useQuery({
     queryKey: ['product', slug],
@@ -173,6 +179,30 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       setSelectedVariantId(apiProduct.variants[0].id || null);
     }
   }, [apiProduct, selectedVariantId]);
+
+  // Handle auto-checkout if redirected back from login
+  useEffect(() => {
+    if (apiProduct && isAuthenticated) {
+      const isCheckoutRequested = searchParams.get('checkout') === 'true';
+      if (isCheckoutRequested) {
+        const paramVariant = searchParams.get('variant');
+        const paramQuantity = searchParams.get('quantity');
+        
+        if (paramVariant && paramVariant !== 'null' && paramVariant !== '') {
+          setSelectedVariantId(parseInt(paramVariant));
+        }
+        if (paramQuantity) {
+          setQuantity(parseInt(paramQuantity));
+        }
+        
+        setIsCheckoutOpen(true);
+        
+        // Clean up URL search parameters to avoid re-triggering checkout on reload
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [apiProduct, isAuthenticated, searchParams]);
 
   const activeFlashSale = useMemo(() => {
     const sVariant = apiProduct?.variants?.find((v: any) => v.id === selectedVariantId) || apiProduct?.variants?.[0];
@@ -269,6 +299,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     }
   };
 
+  const handleBuyNow = () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    setIsCheckoutOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] font-sans">
       <Header />
@@ -309,7 +347,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     THÊM GIỎ HÀNG
                   </button>
                   <button
-                    onClick={() => setIsCheckoutOpen(true)}
+                    onClick={handleBuyNow}
                     className="px-6 py-2.5 bg-[#326e51] text-white text-[10px] font-black rounded-xl hover:bg-[#25543d] transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     MUA NGAY
@@ -554,7 +592,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     THÊM GIỎ HÀNG
                   </button>
                   <button
-                    onClick={() => setIsCheckoutOpen(true)}
+                    onClick={handleBuyNow}
                     className="flex-1 bg-[#326e51] text-white font-black rounded-2xl hover:bg-[#25543d] transition-all shadow-lg shadow-[#326e51]/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                   >
                     MUA NGAY
@@ -909,6 +947,67 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         totalPrice={currentPrice * quantity}
       />
 
+      {/* Auth Guard Modal */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAuthModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-gray-150 overflow-hidden flex flex-col items-center text-center space-y-6"
+            >
+              {/* Premium Glow Top Bar */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#7a9e8e] via-[#326e51] to-[#7a9e8e]" />
+
+              {/* Icon */}
+              <div className="w-16 h-16 rounded-2xl bg-[#7a9e8e]/10 border border-[#7a9e8e]/20 flex items-center justify-center text-[#326e51] shadow-inner">
+                <Info size={28} className="animate-bounce" />
+              </div>
+
+              {/* Content */}
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">Yêu cầu đăng nhập</h3>
+                <p className="text-sm text-gray-500 leading-relaxed font-semibold">
+                  Vui lòng đăng nhập tài khoản của bạn để tiến hành mua sắm sản phẩm và hoàn tất thanh toán cùng SkinMatch nhé!
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAuthModal(false)}
+                  className="flex-1 px-5 py-3.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold text-sm rounded-2xl border border-gray-100 transition-all cursor-pointer active:scale-95"
+                >
+                  Bỏ qua
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAuthModal(false);
+                    router.push(`/login?redirect=${encodeURIComponent(`/products/${slug}?checkout=true&variant=${selectedVariantId || ''}&quantity=${quantity}`)}`);
+                  }}
+                  className="flex-1 px-5 py-3.5 bg-[#326e51] hover:bg-[#25543d] text-white font-black text-sm rounded-2xl shadow-lg shadow-[#326e51]/20 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  Đăng nhập ngay
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Scroll to Top Button */}
       <AnimatePresence>
         {showScrollTop && (
@@ -924,5 +1023,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center">
+        <div className="text-sm text-gray-500 font-semibold animate-pulse">Đang tải chi tiết sản phẩm...</div>
+      </div>
+    }>
+      <ProductContentComponent params={params} />
+    </Suspense>
   );
 }
