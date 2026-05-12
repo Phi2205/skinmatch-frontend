@@ -2,13 +2,13 @@
 
 import { Header } from '@/shared/components/header';
 import { Footer } from '@/shared/components/footer';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail, ArrowLeft, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { verifyOtp } from '@/modules/auth/services/auth.service';
 
-export default function VerifyOtpPage() {
+function VerifyOtpComponent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
@@ -175,5 +175,17 @@ export default function VerifyOtpPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+export default function VerifyOtpPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <RefreshCw className="animate-spin text-[#7a9e8e]" size={40} />
+      </div>
+    }>
+      <VerifyOtpComponent />
+    </Suspense>
   );
 }
