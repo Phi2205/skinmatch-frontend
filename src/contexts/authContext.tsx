@@ -15,7 +15,7 @@ interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string, redirectPath?: string) => Promise<void>;
     register: (email: string, password: string, name: string) => Promise<void>;
     logout: () => Promise<void>;
     updateUser: (user: User) => void;
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
     }, []);
 
-    const login = useCallback(async (email: string, password: string) => {
+    const login = useCallback(async (email: string, password: string, redirectPath?: string) => {
         try {
             setIsLoading(true);
             const response = await loginApi({ email, password });
@@ -51,8 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setItem('user', userData);
                 document.cookie = `user_id=${userData.id}; path=/; max-age=2592000; SameSite=Lax`;
                 document.cookie = `user_role=${userData.role}; path=/; max-age=2592000; SameSite=Lax`;
-                // Redirect based on role
-                if (userData.role === 'ADMIN') {
+                // Redirect based on role or custom redirectPath
+                if (redirectPath) {
+                    router.push(redirectPath);
+                } else if (userData.role === 'ADMIN') {
                     router.push('/admin/dashboard');
                 } else {
                     router.push('/');
