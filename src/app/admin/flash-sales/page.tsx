@@ -10,7 +10,7 @@ import {
   deleteFlashSaleItem
 } from '@/modules/flash-sales/services/flash-sale.service';
 import { getProducts } from '@/modules/product/services/product.service';
-import { CreateFlashSaleCampaignPayload } from '@/modules/flash-sales/types/flash-sale.type';
+import { CreateFlashSaleCampaignPayload, FlashSaleCampaign } from '@/modules/flash-sales/types/flash-sale.type';
 import { Product } from '@/modules/product/types/product.type';
 import { toast } from 'sonner';
 import { Plus, Zap } from 'lucide-react';
@@ -24,7 +24,7 @@ export default function AdminFlashSales() {
   // 1. Fetch active/current flash sales
   const { data: flashSalesResponse, isLoading: isLoadingSales } = useQuery({
     queryKey: ['activeFlashSales'],
-    queryFn: getActiveFlashSales,
+    queryFn: () => getActiveFlashSales(),
   });
 
   // 2. Fetch products list to choose from (limit 100)
@@ -33,7 +33,11 @@ export default function AdminFlashSales() {
     queryFn: () => getProducts({ limit: 100 }),
   });
 
-  const campaigns = flashSalesResponse?.data || [];
+  const campaigns: FlashSaleCampaign[] = flashSalesResponse?.data
+    ? (Array.isArray(flashSalesResponse.data)
+        ? flashSalesResponse.data
+        : (flashSalesResponse.data as any).items || [])
+    : [];
   const productsList = (productsResponse?.data?.items || []) as Product[];
 
   // 3. Mutation to create campaign
@@ -68,6 +72,7 @@ export default function AdminFlashSales() {
     mutationFn: (itemId: number) => deleteFlashSaleItem(itemId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activeFlashSales'] });
+      queryClient.invalidateQueries({ queryKey: ['campaignItemsAdmin'] });
       toast.success('Đã xóa sản phẩm khỏi chiến dịch Flash Sale!');
     },
     onError: (err: any) => {

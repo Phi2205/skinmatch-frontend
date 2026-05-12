@@ -4,6 +4,8 @@ import {
   CreateFlashSaleCampaignPayload,
   CreateFlashSaleItemPayload,
   FlashSaleCampaign,
+  FlashSaleItem,
+  FlashSaleProduct,
 } from "../types/flash-sale.type";
 
 /**
@@ -93,6 +95,25 @@ export async function deleteFlashSaleItem(
     return response.data;
   } catch (error) {
     console.error(`Error deleting flash sale item ${itemId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Lấy danh sách sản phẩm trong chiến dịch Flash Sale kèm phân trang
+ */
+export async function getCampaignItems(
+  campaignId: number,
+  params?: { page?: number; limit?: number }
+): Promise<ApiResponse<{ items: FlashSaleProduct[]; meta: any }>> {
+  try {
+    const response = await axiosInstance.get<ApiResponse<{ items: FlashSaleProduct[]; meta: any }>>(
+      `/flash-sales/${campaignId}/items`,
+      { params }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching items for campaign ${campaignId}:`, error);
     throw error;
   }
 }

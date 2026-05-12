@@ -4,8 +4,9 @@ import { Header } from '@/shared/components/header';
 import { Footer } from '@/shared/components/footer';
 import { Hero } from '@/shared/components/hero';
 import Link from 'next/link';
-import { Leaf, Shield, Recycle } from 'lucide-react';
+import { Leaf, Shield, Recycle, Flame } from 'lucide-react';
 import { BestSellers } from '@/modules/product/components/best-sellers';
+import { HotProducts } from '@/modules/product/components/hot-products';
 import { FlashSale } from '@/modules/flash-sales/components/flash-sale';
 
 export default function Home() {
@@ -16,6 +17,26 @@ export default function Home() {
       <Hero />
 
       <FlashSale />
+
+      {/* Hot Products Section */}
+      <section className="py-16 bg-[#f5f6f8] border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#f0f5f2] text-[#326e51] rounded-full text-xs font-bold uppercase tracking-wider mb-3">
+              <Flame size={14} className="fill-[#326e51] text-[#326e51] animate-pulse" />
+              <span>Cực Kỳ Hot</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">
+              Sản Phẩm Hot Nhất
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
+              Khám phá các sản phẩm đang được săn đón và bán chạy nhất tại SkinMatch ngay hôm nay!
+            </p>
+          </div>
+
+          <HotProducts />
+        </div>
+      </section>
 
       {/* Benefits Section */}
       {/* <section className="py-16 bg-white">

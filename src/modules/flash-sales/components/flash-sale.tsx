@@ -5,8 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingBag, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getActiveFlashSales } from '../services/flash-sale.service';
-import { FlashSaleCampaign, FlashSaleItem } from '../types/flash-sale.type';
+import { getActiveFlashSales, getCampaignItems } from '../services/flash-sale.service';
+import { FlashSaleCampaign, FlashSaleItem, FlashSaleProduct } from '../types/flash-sale.type';
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -19,32 +19,34 @@ export function FlashSale() {
     seconds: 0,
   });
 
-  // Fetch active flash sale campaign
-  const { data: flashSalesResponse, isLoading } = useQuery({
+  const [page] = useState(1);
+  const limit = 20;
+
+  // 1. Fetch active flash sale campaigns
+  const { data: activeCampaignsResponse, isLoading: isActiveLoading } = useQuery({
     queryKey: ['activeFlashSales'],
     queryFn: () => getActiveFlashSales(),
   });
 
-  const isPaginated = flashSalesResponse?.data && !Array.isArray(flashSalesResponse.data);
-  const campaigns: FlashSaleCampaign[] = isPaginated
-    ? (flashSalesResponse?.data as any).items || []
-    : (flashSalesResponse?.data as any) || [];
-  // Use the first active campaign
-  const campaign = campaigns[0];
-  const flashSaleItems: FlashSaleItem[] = campaign?.items || [];
+  const campaigns: FlashSaleCampaign[] = activeCampaignsResponse?.data
+    ? (Array.isArray(activeCampaignsResponse.data)
+        ? activeCampaignsResponse.data
+        : (activeCampaignsResponse.data as any).items || [])
+    : [];
 
-  // Group items by product_id, keeping only the variant with the minimum sale_price
-  const displayItems = Object.values(
-    flashSaleItems.reduce((acc, item) => {
-      const pId = item.product_id;
-      if (!pId) return acc;
-      const existing = acc[pId];
-      if (!existing || item.sale_price < existing.sale_price) {
-        acc[pId] = item;
-      }
-      return acc;
-    }, {} as Record<number, typeof flashSaleItems[0]>)
-  );
+  const campaign = campaigns[0];
+  const campaignId = campaign?.id;
+
+  // 2. Fetch products of that specific active campaign (paginated)
+  const { data: campaignItemsResponse, isLoading: isItemsLoading } = useQuery({
+    queryKey: ['campaignItems', campaignId, page],
+    queryFn: () => getCampaignItems(campaignId!, { page, limit }),
+    enabled: !!campaignId,
+  });
+
+  const isLoading = isActiveLoading || (!!campaignId && isItemsLoading);
+
+  const displayItems: FlashSaleProduct[] = campaignItemsResponse?.data?.items || [];
 
   // Ref and scroll handlers for slider
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -214,21 +216,20 @@ export function FlashSale() {
               ref={scrollRef}
               className="flex overflow-x-auto no-scrollbar gap-3.5 pb-1 scroll-smooth snap-x snap-mandatory"
             >
-              {displayItems.map((item) => {
-                const product = item.products;
-                if (!product) return null;
+              {displayItems.map((product) => {
+                const activeFlashSaleItem = product.flash_sale_items?.reduce((min, curr) => {
+                  return (!min || curr.sale_price < min.sale_price) ? curr : min;
+                }, null as typeof product.flash_sale_items[0] | null);
 
-                const originalPrice = item.variants?.price || item.sale_price * 1.35;
-                const discountPercentage = Math.round(((originalPrice - item.sale_price) / originalPrice) * 100);
+                if (!activeFlashSaleItem) return null;
 
-                // Sales progress indicators for UX
-                const itemsTotal = item.variants?.stock || 20;
-                // const itemsSold = (item.id % 8) + 3;
-                // const percentSold = Math.min(Math.round((itemsSold / itemsTotal) * 100), 95);
+                const salePrice = activeFlashSaleItem.sale_price;
+                const originalPrice = activeFlashSaleItem.variants?.price || salePrice * 1.35;
+                const discountPercentage = Math.round(((originalPrice - salePrice) / originalPrice) * 100);
 
                 return (
                   <Link
-                    key={item.id}
+                    key={product.id}
                     href={`/products/${product.slug}`}
                     className="group block w-[calc(50%-7px)] sm:w-[calc(33.33%-10px)] md:w-[calc(25%-11px)] lg:w-[calc(20%-11px)] shrink-0 snap-start"
                   >
@@ -266,7 +267,7 @@ export function FlashSale() {
                           {/* Price Row */}
                           <div className="flex items-baseline flex-wrap gap-1">
                             <span className="text-[#326e51] font-black text-sm sm:text-[15px]">
-                              {formatPrice(item.sale_price)}
+                              {formatPrice(salePrice)}
                             </span>
                             <span className="text-gray-400 line-through text-[10px] sm:text-xs">
                               {formatPrice(originalPrice)}
