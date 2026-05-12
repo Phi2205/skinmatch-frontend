@@ -2,13 +2,12 @@ import type { Config } from 'tailwindcss'
 
 const config: Config = {
   content: [
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
-    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
       colors: {
-        // Silvor Care design system - Sage green & cream palette
+        // Liora Care design system - Sage green & cream palette
         'sage-dark': '#5a7a6b',
         'sage': '#7a9e8e',
         'sage-light': '#a8bfb5',
@@ -17,7 +16,7 @@ const config: Config = {
         'accent-gold': '#c9b896',
       },
       fontFamily: {
-        'sans': ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
+        'sans': ['var(--font-inter)', 'system-ui', 'sans-serif'],
         'mono': ['var(--font-geist-mono)', 'monospace'],
       },
     },
