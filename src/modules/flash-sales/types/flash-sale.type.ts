@@ -43,3 +43,27 @@ export interface FlashSaleCampaign {
   updated_at?: string;
   items: FlashSaleItem[];
 }
+
+export interface FlashSaleProductVariant {
+  id: number;
+  variant_id?: number | null;
+  sale_price: number;
+  variants?: {
+    id: number;
+    price: number;
+    sku: string;
+    stock: number;
+    attributes?: Array<{ id: number; name: string; value: string }>;
+  } | null;
+}
+
+export interface FlashSaleProduct {
+  id: number;
+  name: string;
+  slug: string;
+  image_url?: string | null;
+  summary?: string | null;
+  rating_sum?: number;
+  review_count?: number;
+  flash_sale_items: FlashSaleProductVariant[];
+}

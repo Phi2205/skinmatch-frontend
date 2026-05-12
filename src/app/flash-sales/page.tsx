@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { Header } from '@/shared/components/header';
 import { Footer } from '@/shared/components/footer';
 import { useQuery } from '@tanstack/react-query';
-import { getActiveFlashSales } from '@/modules/flash-sales/services/flash-sale.service';
+import { getActiveFlashSales, getCampaignItems } from '@/modules/flash-sales/services/flash-sale.service';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Zap, Loader2, Calendar, ShoppingBag, Clock, Sparkles } from 'lucide-react';
-import { FlashSaleCampaign, FlashSaleItem } from '@/modules/flash-sales/types/flash-sale.type';
+import { FlashSaleCampaign, FlashSaleItem, FlashSaleProduct } from '@/modules/flash-sales/types/flash-sale.type';
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -16,38 +16,39 @@ const formatPrice = (price: number) => {
 
 export default function FlashSalesLandingPage() {
   const [page, setPage] = useState(1);
-  const limit = 8;
+  const limit = 16;
   const [timeLeft, setTimeLeft] = useState({
     hours: 0,
     minutes: 0,
     seconds: 0,
   });
 
-  // Fetch active campaigns with pagination
-  const { data: flashSalesResponse, isLoading } = useQuery({
-    queryKey: ['activeFlashSales', page, limit],
-    queryFn: () => getActiveFlashSales({ page, limit }),
+  // 1. Fetch active flash sale campaigns
+  const { data: activeCampaignsResponse, isLoading: isActiveLoading } = useQuery({
+    queryKey: ['activeFlashSales'],
+    queryFn: () => getActiveFlashSales(),
   });
 
-  const isPaginated = flashSalesResponse?.data && !Array.isArray(flashSalesResponse.data);
-  const campaigns: FlashSaleCampaign[] = isPaginated
-    ? (flashSalesResponse?.data as any).items || []
-    : (flashSalesResponse?.data as any) || [];
-  const campaign = campaigns[0];
-  const flashSaleItems: FlashSaleItem[] = campaign?.items || [];
+  const campaigns: FlashSaleCampaign[] = activeCampaignsResponse?.data
+    ? (Array.isArray(activeCampaignsResponse.data)
+        ? activeCampaignsResponse.data
+        : (activeCampaignsResponse.data as any).items || [])
+    : [];
 
-  // Group items by product_id, keeping only the variant with the minimum sale_price
-  const displayItems = Object.values(
-    flashSaleItems.reduce((acc, item) => {
-      const pId = item.product_id;
-      if (!pId) return acc;
-      const existing = acc[pId];
-      if (!existing || item.sale_price < existing.sale_price) {
-        acc[pId] = item;
-      }
-      return acc;
-    }, {} as Record<number, typeof flashSaleItems[0]>)
-  );
+  const campaign = campaigns[0];
+  const campaignId = campaign?.id;
+
+  // 2. Fetch products of that specific active campaign (paginated)
+  const { data: campaignItemsResponse, isLoading: isItemsLoading } = useQuery({
+    queryKey: ['campaignItems', campaignId, page, limit],
+    queryFn: () => getCampaignItems(campaignId!, { page, limit }),
+    enabled: !!campaignId,
+  });
+
+  const isLoading = isActiveLoading || (!!campaignId && isItemsLoading);
+
+  const displayItems: FlashSaleProduct[] = (campaignItemsResponse?.data?.items as any) || [];
+  const totalPages = campaignItemsResponse?.data?.meta?.totalPages || 1;
 
   useEffect(() => {
     if (!campaign?.end_at) return;
@@ -81,9 +82,52 @@ export default function FlashSalesLandingPage() {
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-32 pb-16">
         {isLoading ? (
-          <div className="py-24 text-center flex flex-col items-center justify-center gap-4">
-            <Loader2 className="w-12 h-12 text-[#7a9e8e] animate-spin" />
-            <p className="text-gray-500 font-semibold text-lg">Đang tải danh sách Flash Sale...</p>
+          <div>
+            {/* Banner/Header Section Skeleton */}
+            <div className="bg-[#7a9e8e]/70 rounded-3xl p-8 sm:p-12 mb-12 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center md:justify-between gap-8 animate-pulse">
+              <div className="space-y-4 max-w-xl">
+                <div className="h-6 w-32 bg-white/20 rounded-full" />
+                <div className="h-10 w-64 bg-white/20 rounded-xl" />
+                <div className="h-14 w-full bg-white/10 rounded-xl" />
+              </div>
+
+              {/* Countdown panel Skeleton */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 shrink-0 flex flex-col items-center justify-center gap-2 min-w-[200px]">
+                <div className="h-4 w-28 bg-white/20 rounded" />
+                <div className="flex items-center gap-3 mt-1">
+                  <div className="h-12 w-12 bg-black/20 rounded-lg" />
+                  <span className="text-white/30 font-black text-2xl -mt-5">:</span>
+                  <div className="h-12 w-12 bg-black/20 rounded-lg" />
+                  <span className="text-white/30 font-black text-2xl -mt-5">:</span>
+                  <div className="h-12 w-12 bg-black/20 rounded-lg" />
+                </div>
+              </div>
+            </div>
+
+            {/* Products Grid Skeleton */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div 
+                  key={i} 
+                  className="flex flex-col bg-white rounded-2xl border border-[#e8e5dd]/60 p-4 shadow-sm animate-pulse h-[390px] justify-between"
+                >
+                  <div className="relative aspect-square rounded-xl bg-gray-100" />
+                  <div className="flex-1 flex flex-col justify-between mt-4">
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <div className="h-5 w-20 bg-gray-100 rounded" />
+                        <div className="h-4 w-12 bg-gray-100 rounded mt-0.5" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-100 rounded w-full" />
+                        <div className="h-4 bg-gray-100 rounded w-4/5" />
+                      </div>
+                    </div>
+                    <div className="h-10 bg-gray-100 rounded-xl w-full mt-4" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : campaigns.length === 0 || displayItems.length === 0 ? (
           <div className="bg-white rounded-3xl border border-[#e8e5dd] p-16 text-center max-w-xl mx-auto my-12 shadow-sm">
@@ -152,21 +196,20 @@ export default function FlashSalesLandingPage() {
 
             {/* Products Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {displayItems.map((item) => {
-                const product = item.products;
-                if (!product) return null;
+              {displayItems.map((product) => {
+                const activeFlashSaleItem = product.flash_sale_items?.reduce((min, curr) => {
+                  return (!min || curr.sale_price < min.sale_price) ? curr : min;
+                }, null as typeof product.flash_sale_items[0] | null);
 
-                const originalPrice = item.variants?.price || item.sale_price * 1.35;
-                const discountPercentage = Math.round(((originalPrice - item.sale_price) / originalPrice) * 100);
+                if (!activeFlashSaleItem) return null;
 
-                // Stock details for bar
-                const stock = item.variants?.stock || 20;
-                const sold = (item.id % 8) + 3;
-                const progressWidth = Math.min(Math.round((sold / stock) * 100), 95);
+                const salePrice = activeFlashSaleItem.sale_price;
+                const originalPrice = activeFlashSaleItem.variants?.price || salePrice * 1.35;
+                const discountPercentage = Math.round(((originalPrice - salePrice) / originalPrice) * 100);
 
                 return (
                   <Link 
-                    key={item.id} 
+                    key={product.id} 
                     href={`/products/${product.slug}`} 
                     className="group flex flex-col bg-white rounded-2xl border border-[#e8e5dd] p-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                   >
@@ -201,7 +244,7 @@ export default function FlashSalesLandingPage() {
                         {/* Prices */}
                         <div className="flex items-baseline gap-2">
                           <span className="text-[#326e51] text-base sm:text-lg font-black">
-                            {formatPrice(item.sale_price)}
+                            {formatPrice(salePrice)}
                           </span>
                           <span className="text-gray-400 line-through text-xs sm:text-sm">
                             {formatPrice(originalPrice)}
@@ -241,7 +284,7 @@ export default function FlashSalesLandingPage() {
             </div>
 
             {/* Pagination Controls */}
-            {isPaginated && (flashSalesResponse?.data as any).meta?.totalPages > 1 && (
+            {totalPages > 1 && (
               <div className="flex justify-center items-center gap-2 mt-12">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -251,11 +294,11 @@ export default function FlashSalesLandingPage() {
                   Trước
                 </button>
                 <span className="text-sm font-bold text-gray-600 px-3">
-                  Trang {page} / {(flashSalesResponse?.data as any).meta?.totalPages}
+                  Trang {page} / {totalPages}
                 </span>
                 <button
-                  onClick={() => setPage((p) => Math.min((flashSalesResponse?.data as any).meta?.totalPages, p + 1))}
-                  disabled={page === (flashSalesResponse?.data as any).meta?.totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
                   className="px-4 py-2 border border-[#e8e5dd] rounded-xl text-sm font-semibold bg-white text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
                 >
                   Sau
