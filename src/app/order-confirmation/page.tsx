@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { Header } from '@/shared/components/header';
 import { Footer } from '@/shared/components/footer';
 import Link from 'next/link';
@@ -18,7 +18,7 @@ import { getOrderById } from '@/modules/orders/services/orders.service';
 import { cancelOrder } from '@/modules/payments/services/payments.service';
 import { motion } from 'framer-motion';
 
-export default function OrderConfirmationPage() {
+function OrderConfirmationComponent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
   const resultCode = searchParams.get('resultCode');
@@ -175,5 +175,17 @@ export default function OrderConfirmationPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center">
+        <div className="text-sm text-gray-500 font-semibold animate-pulse">Đang tải thông tin đơn hàng...</div>
+      </div>
+    }>
+      <OrderConfirmationComponent />
+    </Suspense>
   );
 }
