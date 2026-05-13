@@ -3,6 +3,7 @@
 import { Header } from '@/shared/components/header';
 import { Footer } from '@/shared/components/footer';
 import { Hero } from '@/shared/components/hero';
+import { MobileHero } from '@/shared/components/mobile-hero';
 import Link from 'next/link';
 import { Leaf, Shield, Recycle, Flame } from 'lucide-react';
 import { BestSellers } from '@/modules/product/components/best-sellers';
@@ -14,7 +15,16 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <Hero />
+      
+      {/* Desktop Hero */}
+      <div className="hidden md:block">
+        <Hero />
+      </div>
+
+      {/* Mobile Hero (Hasaki style) */}
+      <div className="block md:hidden">
+        <MobileHero />
+      </div>
 
       <FlashSale />
 

@@ -7,17 +7,33 @@ import { motion } from 'framer-motion';
 export function Hero() {
   return (
     <section className="relative h-screen flex flex-col items-center justify-center pt-16 pb-12 overflow-hidden">
-      {/* Background Image */}
+      {/* Background Images */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/background_hero.png"
-          alt="Lush green backgrounds"
+          src="/background.png"
+          alt="Lush green background"
           fill
           priority
-          unoptimized
+          quality={50}
           className="object-cover"
         />
-        {/* Subtle radial gradient to make content pop */}
+        <motion.div
+          className="absolute inset-0"
+          initial={{ y: "100%", opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 1, ease: "easeOut", delay: 0 }}
+        >
+          <Image
+            src="/mountain.png"
+            alt="Mountain foreground"
+            fill
+            priority
+            placeholder="blur"
+            blurDataURL="/mountain-blur.jpg"
+            className="object-cover object-bottom"
+          />
+        </motion.div>
+        {/* Subtle radial gradient to make content pop */}  
         <div className="absolute inset-0 bg-radial-gradient from-transparent to-white/10" />
       </div>
 
@@ -113,12 +129,14 @@ export function Hero() {
                   animate={{ opacity: 1, rotate: -12, scale: 1 }}
                   transition={{ delay: 1.8, duration: 0.4, type: "spring", stiffness: 100 }}
                 >
-                  <Image
-                    src="/image-product-demo.png"
-                    alt="Liora Face Cream tube"
-                    fill
-                    className="object-contain scale-250 drop-shadow-lg hover:scale-280 transition-transform duration-500"
-                  />
+                  <Link href="/products" className="absolute inset-0 z-40 cursor-pointer group-hover/card:scale-105">
+                    <Image
+                      src="/image-product-demo.png"
+                      alt="Liora Face Cream tube"
+                      fill
+                      className="object-contain scale-250 drop-shadow-lg hover:scale-280 transition-transform duration-500"
+                    />
+                  </Link>
                 </motion.div>
                 <motion.div
                   className="text-center space-y-1 mt-23 px-2"
