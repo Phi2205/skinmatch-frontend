@@ -14,14 +14,14 @@ import {
 
 export function MobileHero() {
   const categories = [
-    { name: "Danh Mục", icon: <LayoutGrid size={24} />, color: "bg-emerald-100 text-emerald-600", href: "/categories" },
-    { name: "Deal Sốc", icon: <Flame size={24} />, color: "bg-orange-100 text-orange-600", href: "/flash-sales" },
-    { name: "Hàng Mới", icon: <Sparkles size={24} />, color: "bg-pink-100 text-pink-600", href: "/new-arrivals" },
-    { name: "Combo Rẻ", icon: <Package size={24} />, color: "bg-blue-100 text-blue-600", href: "/combos" },
-    { name: "Da Mặt", icon: <Droplets size={24} />, color: "bg-cyan-100 text-cyan-600", href: "/skincare" },
-    { name: "Cơ Thể", icon: <Flower2 size={24} />, color: "bg-purple-100 text-purple-600", href: "/bodycare" },
-    { name: "Hỗ Trợ", icon: <HeadphonesIcon size={24} />, color: "bg-gray-100 text-gray-600", href: "/support" },
-    { name: "Đặt Hẹn", icon: <CalendarCheck size={24} />, color: "bg-rose-100 text-rose-600", href: "/booking" },
+    { name: "Danh Mục", icon: <LayoutGrid size={24} />, color: "bg-emerald-100 text-emerald-600", href: "/categories", active: false },
+    { name: "Deal Sốc", icon: <Flame size={24} />, color: "bg-orange-100 text-orange-600", href: "/flash-sales", active: true },
+    { name: "Hàng Mới", icon: <Sparkles size={24} />, color: "bg-pink-100 text-pink-600", href: "/new-arrivals", active: false },
+    { name: "Combo Rẻ", icon: <Package size={24} />, color: "bg-blue-100 text-blue-600", href: "/combos", active: false },
+    { name: "Da Mặt", icon: <Droplets size={24} />, color: "bg-cyan-100 text-cyan-600", href: "/skincare", active: false },
+    { name: "Cơ Thể", icon: <Flower2 size={24} />, color: "bg-purple-100 text-purple-600", href: "/bodycare", active: false },
+    { name: "Hỗ Trợ", icon: <HeadphonesIcon size={24} />, color: "bg-gray-100 text-gray-600", href: "/support", active: false },
+    { name: "Đặt Hẹn", icon: <CalendarCheck size={24} />, color: "bg-rose-100 text-rose-600", href: "/booking", active: false },
   ];
 
   return (
@@ -57,8 +57,12 @@ export function MobileHero() {
       <div className="bg-white rounded-xl p-4 shadow-sm">
         <div className="grid grid-cols-4 gap-y-6 gap-x-2">
           {categories.map((item, index) => (
-            <Link href={item.href} key={index} className="flex flex-col items-center gap-2 group">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${item.color}`}>
+            <Link 
+              href={item.active ? item.href : "#"} 
+              key={index} 
+              className={`flex flex-col items-center gap-2 group ${!item.active ? 'opacity-50 pointer-events-none' : ''}`}
+            >
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-transform ${item.active ? 'group-hover:scale-110' : ''} ${item.color}`}>
                 {item.icon}
               </div>
               <span className="text-[11px] font-medium text-gray-700 text-center leading-tight">
