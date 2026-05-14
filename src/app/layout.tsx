@@ -12,8 +12,8 @@ const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Liora Care - Natural Skincare for Everyone',
-  description: 'Discover pure, natural skincare products powered by nature. Shop our collection of serums, moisturizers, and treatments for all skin types.',
+  title: 'SkinMatch - Sản Phẩm Chăm Sóc Da Tự Nhiên',
+  description: 'Khám phá các sản phẩm chăm sóc da tự nhiên, tinh khiết. Mua sắm bộ sưu tập serum, kem dưỡng ẩm và các sản phẩm đặc trị phù hợp với mọi loại da.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -40,8 +40,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="bg-background" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased bg-background`}>
+    <html lang="vi" className="bg-background" suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans antialiased bg-background pt-[60px] md:pt-0 pb-20 md:pb-0`}>
         <QueryProvider>
           <AuthProvider>
             <CartProvider>

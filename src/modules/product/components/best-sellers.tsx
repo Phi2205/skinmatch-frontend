@@ -66,19 +66,19 @@ export function BestSellers() {
   return (
     <div className="space-y-12">
       {/* Redesigned Premium Responsive Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
         {accumulatedProducts.length === 0 && isLoading ? (
           // Initial Loading Skeletons
           Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-3xl overflow-hidden border border-gray-100 p-5 space-y-4 animate-pulse shadow-sm">
-              <div className="aspect-square bg-gray-100 rounded-2xl w-full" />
-              <div className="space-y-3">
-                <div className="h-4 bg-gray-100 rounded w-1/3" />
-                <div className="h-5 bg-gray-100 rounded w-full" />
-                <div className="h-4 bg-gray-100 rounded w-5/6" />
+            <div key={i} className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-100 p-3 sm:p-5 space-y-3 sm:space-y-4 animate-pulse shadow-sm">
+              <div className="aspect-square bg-gray-100 rounded-xl sm:rounded-2xl w-full" />
+              <div className="space-y-2 sm:space-y-3">
+                <div className="h-3 sm:h-4 bg-gray-100 rounded w-1/3" />
+                <div className="h-4 sm:h-5 bg-gray-100 rounded w-full" />
+                <div className="h-3 sm:h-4 bg-gray-100 rounded w-5/6" />
                 <div className="flex justify-between items-center pt-2">
-                  <div className="h-6 bg-gray-100 rounded w-1/2" />
-                  <div className="w-10 h-10 rounded-full bg-gray-100" />
+                  <div className="h-5 sm:h-6 bg-gray-100 rounded w-1/2" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-100" />
                 </div>
               </div>
             </div>
@@ -117,74 +117,67 @@ export function BestSellers() {
               : 0;
 
             return (
-              <div key={product.id} className="group relative bg-white rounded-3xl overflow-hidden border border-gray-100/80 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full">
+              <div key={product.id} className="group relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-100/80 shadow-sm hover:shadow-xl hover:-translate-y-1 sm:hover:-translate-y-2 transition-all duration-500 flex flex-col h-full">
                 {/* Product Link Container */}
                 <Link href={`/products/${product.slug}`} className="block flex-1 flex flex-col">
                   {/* Image Container with Elegant Gradient */}
-                  <div className="relative aspect-square bg-gradient-to-br from-[#faf9f6] to-[#f5f2ed]/40 overflow-hidden p-6 flex-shrink-0">
+                  <div className="relative aspect-square bg-gradient-to-br from-[#faf9f6] to-[#f5f2ed]/40 overflow-hidden p-3 sm:p-6 flex-shrink-0">
                     {/* Status badges */}
-                    <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
-                      <span className="px-2.5 py-1 bg-[#326e51] text-white text-[9px] font-black uppercase tracking-wider rounded-lg shadow-sm flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-yellow-300 fill-yellow-300 animate-pulse" /> BÁN CHẠY
+                    <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-10 flex flex-col gap-1.5">
+                      <span className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 bg-[#326e51] text-white text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded sm:rounded-lg shadow-sm flex items-center gap-1">
+                        <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-yellow-300 fill-yellow-300 animate-pulse" /> <span className="hidden sm:inline">BÁN CHẠY</span><span className="inline sm:hidden">HOT</span>
                       </span>
                     </div>
 
                     {/* Corner Discount Badge (Hasaki Style) */}
                     {discountPercent > 0 && (
-                      <div className="absolute top-0 right-0 z-10 bg-[#326e51] text-white font-black text-xs px-3.5 py-1.5 rounded-bl-2xl shadow-sm flex items-center gap-1">
-                        {hasActiveFlashSale && <Zap size={11} className="fill-amber-300 text-amber-300 animate-pulse" />}
+                      <div className="absolute top-0 right-0 z-10 bg-[#326e51] text-white font-black text-[10px] sm:text-xs px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-bl-xl sm:rounded-bl-2xl shadow-sm flex items-center gap-1">
+                        {hasActiveFlashSale && <Zap size={11} className="fill-amber-300 text-amber-300 animate-pulse hidden sm:block" />}
                         <span>-{discountPercent}%</span>
                       </div>
                     )}
 
                     {/* Decorative Heart Button */}
-                    <button className="absolute top-12 right-4 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors cursor-pointer hover:scale-115 active:scale-95 shadow-sm">
-                      <Heart size={14} className="hover:fill-red-500" />
+                    <button className="absolute top-8 sm:top-12 right-2 sm:right-4 z-10 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors cursor-pointer hover:scale-110 active:scale-95 shadow-sm">
+                      <Heart size={12} className="hover:fill-red-500" />
                     </button>
 
                     <Image
                       src={productImg}
                       alt={product.name}
                       fill
-                      className="object-contain p-5 group-hover:scale-110 transition-transform duration-700 ease-out"
-                      sizes="(max-width: 768px) 100vw, 25vw"
+                      className="object-contain p-2 sm:p-5 group-hover:scale-110 transition-transform duration-700 ease-out"
+                      sizes="(max-width: 768px) 50vw, 25vw"
                       priority
                     />
                   </div>
 
                   {/* Content and Meta Section */}
-                  <div className="p-5 flex-1 flex flex-col">
+                  <div className="p-2.5 sm:p-5 flex-1 flex flex-col">
                     {/* Category and Star Rating */}
-                    <div className="flex items-center justify-between gap-2 mb-2.5">
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#7a9e8e]">
+                    <div className="flex items-center justify-between gap-1 sm:gap-2 mb-1.5 sm:mb-2.5">
+                      <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest text-[#7a9e8e] line-clamp-1">
                         {product.categories?.[0]?.name || 'Mỹ Phẩm'}
                       </span>
-                      <div className="flex items-center gap-1 text-xs font-semibold text-amber-500 bg-amber-50/50 px-2 py-0.5 rounded-full border border-amber-100/30">
-                        <Star size={11} className="fill-amber-500 text-amber-500" />
+                      <div className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-semibold text-amber-500 bg-amber-50/50 px-1.5 sm:px-2 py-0.5 rounded-full border border-amber-100/30">
+                        <Star size={10} className="fill-amber-500 text-amber-500" />
                         <span>{product.rating || '4.9'}</span>
                       </div>
                     </div>
 
                     {/* Product Name */}
-                    <h3 className="font-extrabold text-sm text-gray-900 leading-snug group-hover:text-[#326e51] transition-colors line-clamp-2 mb-2 flex-1">
+                    <h3 className="font-bold sm:font-extrabold text-xs sm:text-sm text-gray-900 leading-snug group-hover:text-[#326e51] transition-colors line-clamp-2 mb-1.5 sm:mb-2 flex-1">
                       {product.name}
                     </h3>
 
-                    {/* Sales Count & Summary */}
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 mb-2">
-                      <span>{getSoldCount(product.id)} đã bán</span>
-                      <span>•</span>
-                      <span className="font-normal line-clamp-1">{product.summary || 'Chăm sóc tối ưu'}</span>
-                    </div>
-
                     {/* Price and CTA */}
-                    <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between gap-2">
+                    <div className="mt-auto pt-2 sm:pt-4 border-t border-gray-50 flex items-end justify-between gap-1">
                       <div className="flex flex-col">
-                        <span className="text-base font-black text-[#326e51]">
+                        <span className="text-[13px] sm:text-base font-black text-[#326e51] leading-tight">
                           {formatPrice(currentPrice)}
                         </span>
                         {currentOriginalPrice && (
-                          <span className="text-[11px] text-gray-400 line-through">
+                          <span className="text-[9px] sm:text-[11px] text-gray-400 line-through">
                             {formatPrice(currentOriginalPrice)}
                           </span>
                         )}
@@ -196,10 +189,10 @@ export function BestSellers() {
                           e.stopPropagation();
                           handleAddToCart(product);
                         }}
-                        className="w-10 h-10 bg-[#7a9e8e] hover:bg-[#326e51] text-white rounded-2xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg shadow-[#7a9e8e]/20 active:scale-95 cursor-pointer"
+                        className="w-8 h-8 sm:w-10 sm:h-10 bg-[#7a9e8e] hover:bg-[#326e51] text-white rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-lg shadow-[#7a9e8e]/20 active:scale-95 cursor-pointer shrink-0"
                         title="Thêm nhanh vào giỏ hàng"
                       >
-                        <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+                        <Plus className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-500" />
                       </button>
                     </div>
                   </div>
@@ -212,15 +205,15 @@ export function BestSellers() {
         {/* Skeletons while loading more items */}
         {isFetching && page > 1 && (
           Array.from({ length: 8 }).map((_, i) => (
-            <div key={`more-skeleton-${i}`} className="bg-white rounded-3xl overflow-hidden border border-gray-100 p-5 space-y-4 animate-pulse shadow-sm">
-              <div className="aspect-square bg-gray-100 rounded-2xl w-full" />
-              <div className="space-y-3">
-                <div className="h-4 bg-gray-100 rounded w-1/3" />
-                <div className="h-5 bg-gray-100 rounded w-full" />
-                <div className="h-4 bg-gray-100 rounded w-5/6" />
+            <div key={`more-skeleton-${i}`} className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-100 p-3 sm:p-5 space-y-3 sm:space-y-4 animate-pulse shadow-sm">
+              <div className="aspect-square bg-gray-100 rounded-xl sm:rounded-2xl w-full" />
+              <div className="space-y-2 sm:space-y-3">
+                <div className="h-3 sm:h-4 bg-gray-100 rounded w-1/3" />
+                <div className="h-4 sm:h-5 bg-gray-100 rounded w-full" />
+                <div className="h-3 sm:h-4 bg-gray-100 rounded w-5/6" />
                 <div className="flex justify-between items-center pt-2">
-                  <div className="h-6 bg-gray-100 rounded w-1/2" />
-                  <div className="w-10 h-10 rounded-full bg-gray-100" />
+                  <div className="h-5 sm:h-6 bg-gray-100 rounded w-1/2" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-100" />
                 </div>
               </div>
             </div>
