@@ -5,7 +5,7 @@ import { Footer } from '@/shared/components/footer';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useMemo, useEffect, Suspense } from 'react';
-import { Search, ChevronDown, Plus, Loader2, Zap } from 'lucide-react';
+import { Search, ChevronDown, Plus, Loader2, Zap, SlidersHorizontal, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import { getProducts } from '@/modules/product/services/product.service';
@@ -143,42 +143,39 @@ function ProductsContent() {
       <Header />
 
       {/* Page Header */}
-      <section className="bg-[#faf8f5] border-b border-[#e8e5dd] pt-28 pb-8">
+      <section className="hidden sm:block bg-[#faf8f5] border-b border-[#e8e5dd] pt-28 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Our Products</h1>
-          <p className="text-gray-600 mt-2">
-            Discover our collection of natural skincare products crafted for every skin type
-          </p>
+          <h1 className="text-4xl font-bold text-[#1a654d] tracking-tight">Sản Phẩm</h1>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-[16px] sm:pt-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar Filters */}
           <div
-            className={`lg:col-span-1 ${showFilters ? 'block' : 'hidden'
-              } lg:block bg-white rounded-lg p-6 h-fit border border-[#e8e5dd]`}
+            className={`lg:col-span-1 ${showFilters ? 'fixed top-[52px] inset-x-0 bottom-0 z-50 bg-white p-6 pb-24 overflow-y-auto animate-in slide-in-from-bottom-4 lg:relative lg:top-auto lg:inset-auto lg:z-0 lg:overflow-visible lg:animate-none lg:pb-6' : 'hidden lg:block'
+              } bg-white rounded-lg p-6 h-fit border border-[#e8e5dd] shadow-2xl lg:shadow-none`}
           >
-            <div className="flex justify-between items-center lg:block mb-6 lg:mb-0">
-              <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100 lg:border-none lg:pb-0 lg:mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">Bộ lọc</h2>
               <button
-                className="lg:hidden"
+                className="lg:hidden w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold"
                 onClick={() => setShowFilters(false)}
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Search in sidebar */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search
+                Tìm kiếm
               </label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Tìm kiếm sản phẩm..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-[#e8e5dd] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]"
@@ -188,7 +185,7 @@ function ProductsContent() {
 
             {/* Category Filter */}
             <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Category</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Danh mục</h3>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <input
@@ -198,7 +195,7 @@ function ProductsContent() {
                     className="w-4 h-4 text-[#7a9e8e] focus:ring-[#7a9e8e] border-gray-300"
                   />
                   <span className={`text-sm ${selectedCategory === 'All' ? 'text-[#7a9e8e] font-bold' : 'text-gray-600'} group-hover:text-[#7a9e8e] transition-colors`}>
-                    All Categories
+                    Tất cả danh mục
                   </span>
                 </label>
                 {categories.slice(0, isCategoriesExpanded ? undefined : 4).map((cat) => (
@@ -219,7 +216,7 @@ function ProductsContent() {
                     onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
                     className="text-xs font-bold text-[#7a9e8e] hover:underline flex items-center gap-1 mt-1"
                   >
-                    {isCategoriesExpanded ? 'See Less' : `See More (${categories.length - 4})`}
+                    {isCategoriesExpanded ? 'Thu gọn' : `Xem thêm (${categories.length - 4})`}
                     <ChevronDown className={`w-3 h-3 transition-transform ${isCategoriesExpanded ? 'rotate-180' : ''}`} />
                   </button>
                 )}
@@ -228,7 +225,7 @@ function ProductsContent() {
 
             {/* Skin Type Filter */}
             <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Skin Type</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Loại da</h3>
               <div className="space-y-2">
                 {skinTypes.slice(0, isSkinTypesExpanded ? undefined : 4).map((type) => (
                   <label key={type.id} className="flex items-center gap-2 cursor-pointer group">
@@ -248,7 +245,7 @@ function ProductsContent() {
                     onClick={() => setIsSkinTypesExpanded(!isSkinTypesExpanded)}
                     className="text-xs font-bold text-[#7a9e8e] hover:underline flex items-center gap-1 mt-1"
                   >
-                    {isSkinTypesExpanded ? 'See Less' : `See More (${skinTypes.length - 4})`}
+                    {isSkinTypesExpanded ? 'Thu gọn' : `Xem thêm (${skinTypes.length - 4})`}
                     <ChevronDown className={`w-3 h-3 transition-transform ${isSkinTypesExpanded ? 'rotate-180' : ''}`} />
                   </button>
                 )}
@@ -257,7 +254,7 @@ function ProductsContent() {
 
             {/* Concerns Filter */}
             <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Skin Concerns</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Vấn đề da</h3>
               <div className="space-y-2">
                 {concerns.slice(0, isConcernsExpanded ? undefined : 4).map((concern) => (
                   <label key={concern.id} className="flex items-center gap-2 cursor-pointer group">
@@ -277,7 +274,7 @@ function ProductsContent() {
                     onClick={() => setIsConcernsExpanded(!isConcernsExpanded)}
                     className="text-xs font-bold text-[#7a9e8e] hover:underline flex items-center gap-1 mt-1"
                   >
-                    {isConcernsExpanded ? 'See Less' : `See More (${concerns.length - 4})`}
+                    {isConcernsExpanded ? 'Thu gọn' : `Xem thêm (${concerns.length - 4})`}
                     <ChevronDown className={`w-3 h-3 transition-transform ${isConcernsExpanded ? 'rotate-180' : ''}`} />
                   </button>
                 )}
@@ -286,10 +283,10 @@ function ProductsContent() {
 
             {/* Price Range */}
             <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Price Range</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Khoảng giá</h3>
               <div className="space-y-4">
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Max Price</span>
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Giá cao nhất</span>
                   <span className="text-sm font-black text-[#7a9e8e]">{priceRange[1].toLocaleString('vi-VN')}₫</span>
                 </div>
                 <input
@@ -324,49 +321,60 @@ function ProductsContent() {
                   }}
                   className="w-full px-4 py-2 bg-[#f5f2ed] text-gray-900 rounded-lg hover:bg-[#e8e5dd] transition text-sm font-bold uppercase tracking-wider active:scale-95"
                 >
-                  Reset All
+                  Đặt lại tất cả
                 </button>
               )}
+
+            {/* Mobile Apply Button */}
+            <div className="lg:hidden pt-6 mt-6 border-t border-gray-100">
+              <button
+                onClick={() => setShowFilters(false)}
+                className="w-full px-4 py-3 bg-[#7a9e8e] text-white rounded-xl font-bold uppercase tracking-wider text-sm shadow-md active:scale-95 transition-all"
+              >
+                Áp dụng bộ lọc
+              </button>
+            </div>
           </div>
 
           {/* Products Grid */}
           <div className="lg:col-span-3">
             {/* Sort and mobile filter toggle */}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <p className="text-sm text-gray-600">
-                Showing {filteredProducts.length} products
+                Hiển thị {filteredProducts.length} sản phẩm
               </p>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between w-full sm:w-auto gap-3">
                 <button
-                  className="lg:hidden px-4 py-2 border border-[#e8e5dd] rounded-lg text-sm font-semibold"
-                  onClick={() => setShowFilters(!showFilters)}
+                  className="lg:hidden flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-[#e8e5dd] rounded-xl text-sm font-bold bg-white text-gray-700 shadow-sm active:scale-95 transition-all cursor-pointer"
+                  onClick={() => setShowFilters(true)}
                 >
-                  Filters
+                  <SlidersHorizontal className="w-4 h-4 text-[#7a9e8e]" />
+                  Bộ lọc
                 </button>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-2 border border-[#e8e5dd] rounded-lg text-sm font-semibold bg-white"
+                  className="flex-1 sm:flex-none px-4 py-2 border border-[#e8e5dd] rounded-xl text-sm font-bold bg-white text-gray-700 shadow-sm focus:ring-2 focus:ring-[#7a9e8e] outline-none cursor-pointer"
                 >
-                  <option value="featured">Featured</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="newest">Newest</option>
-                  <option value="rating">Highest Rated</option>
+                  <option value="featured">Nổi bật</option>
+                  <option value="price-low">Giá: Thấp đến Cao</option>
+                  <option value="price-high">Giá: Cao đến Thấp</option>
+                  <option value="newest">Mới nhất</option>
+                  <option value="rating">Đánh giá cao nhất</option>
                 </select>
               </div>
             </div>
 
             {/* Products */}
             {isLoading && filteredProducts.length === 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                 {[...Array(16)].map((_, i) => (
                   <ProductCardSkeleton key={`initial-skeleton-${i}`} />
                 ))}
               </div>
             ) : filteredProducts.length > 0 ? (
               <div className="space-y-12">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                   {filteredProducts.map((product) => {
                     // Resolve active flash sale at product or variant level
                     const activeFlashSale = product.flash_sale || (product.variants || []).find((v: any) => v.flash_sale)?.flash_sale;
@@ -395,10 +403,10 @@ function ProductsContent() {
                       <Link key={product.id} href={`/products/${product.slug}`} className="group h-full">
                         <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 h-full flex flex-col border border-gray-100">
                           {/* Image Container - Square */}
-                          <div className="relative aspect-square bg-[#f8f9fa] overflow-hidden p-6">
+                          <div className="relative aspect-square bg-[#f8f9fa] overflow-hidden p-3 sm:p-6">
                             {/* Corner Discount Badge */}
                             {discountPercent > 0 && (
-                              <div className="absolute top-0 right-0 z-10 bg-[#326e51] text-white font-black text-[10px] px-2.5 py-1.5 rounded-bl-xl shadow-sm flex items-center gap-1">
+                              <div className="absolute top-0 right-0 z-10 bg-[#326e51] text-white font-black text-[9px] sm:text-[10px] px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-bl-xl shadow-sm flex items-center gap-1">
                                 {hasActiveFlashSale && <Zap size={10} className="fill-amber-300 text-amber-300 animate-pulse" />}
                                 <span>-{discountPercent}%</span>
                               </div>
@@ -407,44 +415,44 @@ function ProductsContent() {
                               src={product.image_url || '/placeholder.png'}
                               alt={product.name}
                               fill
-                              className="object-contain p-4 group-hover:scale-110 transition-transform duration-700 ease-out"
+                              className="object-contain p-2 sm:p-4 group-hover:scale-110 transition-transform duration-700 ease-out"
                             />
                           </div>
 
                           {/* Content */}
-                          <div className="p-5 flex-1 flex flex-col">
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="text-[10px] font-black uppercase tracking-widest text-[#7a9e8e] bg-[#7a9e8e]/5 px-2 py-1 rounded">
-                                {product.categories?.[0]?.name || 'Uncategorized'}
+                          <div className="p-3 sm:p-5 flex-1 flex flex-col">
+                            <div className="flex items-center justify-between mb-2 sm:mb-3 gap-1">
+                              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#7a9e8e] bg-[#7a9e8e]/5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded line-clamp-1 max-w-[70%]">
+                                {product.categories?.[0]?.name || 'Chưa phân loại'}
                               </span>
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 flex-shrink-0">
                                 <span className="text-[10px] font-bold text-gray-900">★ 4.9</span>
                               </div>
                             </div>
 
-                            <h3 className="font-bold text-gray-900 mb-2 group-hover:text-[#7a9e8e] transition-colors line-clamp-2 leading-snug flex-1">
+                            <h3 className="text-xs sm:text-base font-bold text-gray-900 mb-2 group-hover:text-[#7a9e8e] transition-colors line-clamp-2 leading-snug flex-1">
                               {product.name}
                             </h3>
 
-                            <div className="mt-auto pt-4 border-t border-gray-50">
-                              <div className="flex justify-between items-center gap-2">
-                                <div className="flex flex-col">
-                                  <span className="text-lg font-black text-[#326e51]">
+                            <div className="mt-auto pt-3 sm:pt-4 border-t border-gray-50">
+                              <div className="flex justify-between items-center gap-1 sm:gap-2">
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <span className="text-sm sm:text-lg font-black text-[#326e51] truncate">
                                     {currentPrice.toLocaleString('vi-VN')}₫
                                   </span>
                                   {currentOriginalPrice && currentOriginalPrice > currentPrice && (
-                                    <div className="flex items-center gap-1.5 mt-0.5">
-                                      <span className="text-xs text-gray-400 line-through">
+                                    <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                                      <span className="text-[10px] sm:text-xs text-gray-400 line-through">
                                         {currentOriginalPrice.toLocaleString('vi-VN')}₫
                                       </span>
-                                      <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1 py-0.2 rounded">
+                                      <span className="text-[9px] sm:text-[10px] font-bold text-red-600 bg-red-50 px-1 py-0.2 rounded">
                                         -{discountPercent}%
                                       </span>
                                     </div>
                                   )}
                                 </div>
-                                <button className="w-10 h-10 bg-[#7a9e8e] text-white rounded-full flex items-center justify-center hover:bg-[#5a7a6b] transition-all shadow-md active:scale-95 group-hover:rotate-90">
-                                  <Plus className="w-5 h-5" />
+                                <button className="w-8 h-8 sm:w-10 sm:h-10 bg-[#7a9e8e] text-white rounded-full flex items-center justify-center hover:bg-[#5a7a6b] transition-all shadow-md active:scale-95 group-hover:rotate-90 flex-shrink-0">
+                                  <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </button>
                               </div>
                             </div>
@@ -488,11 +496,10 @@ function ProductsContent() {
                   <Search className="w-8 h-8 text-gray-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  No products found
+                  Không tìm thấy sản phẩm nào
                 </h3>
                 <p className="text-gray-600">
-                  Try adjusting your filters or search terms to find what you're
-                  looking for.
+                  Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm để tìm sản phẩm bạn cần.
                 </p>
                 <button
                   onClick={() => {
@@ -504,7 +511,7 @@ function ProductsContent() {
                   }}
                   className="mt-6 text-[#7a9e8e] font-semibold hover:underline"
                 >
-                  Clear all filters
+                  Xóa tất cả bộ lọc
                 </button>
               </div>
             )}

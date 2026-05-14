@@ -21,9 +21,9 @@ export default function CartPage() {
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
-  const shipping = items.length > 0 ? 10 : 0;
-  const tax = (total + shipping) * 0.1;
-  const grandTotal = total + shipping + tax;
+  const shipping = 0;
+  const tax = 0;
+  const grandTotal = total;
 
   if (isAuthLoading || isCartLoading) {
     return (
@@ -32,7 +32,7 @@ export default function CartPage() {
         <div className="flex-1 flex items-center justify-center pt-20">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-12 h-12 text-[#7a9e8e] animate-spin" />
-            <p className="text-gray-600 animate-pulse">Loading your cart...</p>
+            <p className="text-gray-600 animate-pulse">Đang tải giỏ hàng...</p>
           </div>
         </div>
         <Footer />
@@ -67,16 +67,16 @@ export default function CartPage() {
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Your cart is empty
+              Giỏ hàng của bạn đang trống
             </h2>
             <p className="text-gray-600 mb-8">
-              Discover our collection of natural skincare products
+              Khám phá bộ sưu tập các sản phẩm chăm sóc da của chúng tôi
             </p>
             <Link
               href="/products"
               className="inline-block px-8 py-3 bg-[#7a9e8e] text-white font-semibold rounded-lg hover:bg-[#5a7a6b] transition"
             >
-              Continue Shopping
+              Tiếp tục mua sắm
             </Link>
           </div>
         </div>
@@ -90,9 +90,9 @@ export default function CartPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
 
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-28 pb-12">
+      <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 md:pt-28 pb-12">
         {/* Page Title */}
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+        <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-4 md:mb-8">Giỏ Hàng</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
@@ -176,33 +176,21 @@ export default function CartPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg p-6 border border-[#e8e5dd] sticky top-20">
               <h2 className="text-xl font-bold text-gray-900 mb-6">
-                Order Summary
+                Tóm tắt đơn hàng
               </h2>
 
               <div className="space-y-4 mb-6 pb-6 border-b border-[#e8e5dd]">
                 <div className="flex justify-between">
-                  <span className="text-gray-700">Subtotal</span>
+                  <span className="text-gray-700">Tạm tính</span>
                   <span className="font-semibold text-gray-900">
                     {total.toLocaleString('vi-VN')}₫
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-700">Shipping</span>
-                  <span className="font-semibold text-gray-900">
-                    {shipping.toLocaleString('vi-VN')}₫
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-700">Tax</span>
-                  <span className="font-semibold text-gray-900">
-                    {tax.toLocaleString('vi-VN')}₫
                   </span>
                 </div>
               </div>
 
               <div className="mb-6 pb-6 border-b border-[#e8e5dd]">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-gray-900">Total</span>
+                  <span className="text-lg font-bold text-gray-900">Tổng cộng</span>
                   <span className="text-2xl font-bold text-[#7a9e8e]">
                     {grandTotal.toLocaleString('vi-VN')}₫
                   </span>
@@ -214,7 +202,7 @@ export default function CartPage() {
                 href="/checkout"
                 className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#7a9e8e] text-white font-semibold rounded-lg hover:bg-[#5a7a6b] transition mb-4"
               >
-                Proceed to Checkout
+                Tiến hành thanh toán
                 <ArrowRight className="w-5 h-5" />
               </Link>
 
@@ -223,7 +211,7 @@ export default function CartPage() {
                 href="/products"
                 className="w-full block text-center px-6 py-3 border border-[#e8e5dd] text-gray-900 font-semibold rounded-lg hover:bg-[#f5f2ed] transition"
               >
-                Continue Shopping
+                Tiếp tục mua sắm
               </Link>
 
               {/* Trust Badges */}
@@ -234,11 +222,11 @@ export default function CartPage() {
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-lg">✓</span>
-                  <span>30-day money-back guarantee</span>
+                  <span>Đảm bảo hoàn tiền trong 30 ngày</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-lg">✓</span>
-                  <span>Secure checkout with SSL</span>
+                  <span>Thanh toán an toàn với bảo mật SSL</span>
                 </div>
               </div>
             </div>

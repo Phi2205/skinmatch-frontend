@@ -15,32 +15,32 @@ export function Footer() {
               <span className="text-lg font-bold">Liora Care</span>
             </div>
             <p className="text-sm text-gray-400">
-              Pure care, powered by nature. Cruelty-free & eco-conscious skincare for everyone.
+              Chăm sóc tinh khiết, sức mạnh từ tự nhiên. Mỹ phẩm thuần chay & thân thiện với môi trường.
             </p>
           </div>
 
           {/* Shop */}
           <div>
-            <h3 className="font-semibold mb-4">Shop</h3>
+            <h3 className="font-semibold mb-4">Cửa hàng</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/products" className="text-gray-400 hover:text-[#7a9e8e] transition">
-                  All Products
+                  Tất cả sản phẩm
                 </Link>
               </li>
               <li>
                 <Link href="/products?category=cleansers" className="text-gray-400 hover:text-[#7a9e8e] transition">
-                  Cleansers
+                  Sữa rửa mặt
                 </Link>
               </li>
               <li>
                 <Link href="/products?category=moisturizers" className="text-gray-400 hover:text-[#7a9e8e] transition">
-                  Moisturizers
+                  Kem dưỡng ẩm
                 </Link>
               </li>
               <li>
                 <Link href="/products?category=serums-treatments" className="text-gray-400 hover:text-[#7a9e8e] transition">
-                  Serums & Treatments
+                  Serum & Đặc trị
                 </Link>
               </li>
             </ul>
@@ -48,16 +48,16 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="font-semibold mb-4">Company</h3>
+            <h3 className="font-semibold mb-4">Công ty</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="#about" className="text-gray-400 hover:text-[#7a9e8e] transition">
-                  About Us
+                  Về chúng tôi
                 </Link>
               </li>
               <li>
                 <Link href="#contact" className="text-gray-400 hover:text-[#7a9e8e] transition">
-                  Contact
+                  Liên hệ
                 </Link>
               </li>
               <li>
@@ -67,7 +67,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="#careers" className="text-gray-400 hover:text-[#7a9e8e] transition">
-                  Careers
+                  Tuyển dụng
                 </Link>
               </li>
             </ul>
@@ -75,26 +75,26 @@ export function Footer() {
 
           {/* Support */}
           <div>
-            <h3 className="font-semibold mb-4">Support</h3>
+            <h3 className="font-semibold mb-4">Hỗ trợ</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="#faq" className="text-gray-400 hover:text-[#7a9e8e] transition">
-                  FAQ
+                  Câu hỏi thường gặp
                 </Link>
               </li>
               <li>
                 <Link href="#shipping" className="text-gray-400 hover:text-[#7a9e8e] transition">
-                  Shipping
+                  Giao hàng
                 </Link>
               </li>
               <li>
                 <Link href="#returns" className="text-gray-400 hover:text-[#7a9e8e] transition">
-                  Returns
+                  Đổi trả
                 </Link>
               </li>
               <li>
                 <Link href="#privacy" className="text-gray-400 hover:text-[#7a9e8e] transition">
-                  Privacy Policy
+                  Chính sách bảo mật
                 </Link>
               </li>
             </ul>
@@ -104,7 +104,7 @@ export function Footer() {
         {/* Bottom Section */}
         <div className="border-t border-gray-700 pt-6 flex flex-col sm:flex-row justify-between items-center">
           <p className="text-sm text-gray-400">
-            &copy; 2024 Liora Care. All rights reserved.
+            &copy; 2024 Liora Care. Đã đăng ký bản quyền.
           </p>
           <div className="flex gap-4 mt-4 sm:mt-0">
             <a href="#" className="text-gray-400 hover:text-[#7a9e8e] transition">

@@ -1,15 +1,15 @@
 "use client";
 import Image from 'next/image';
 import Link from 'next/link';
-import { 
-  LayoutGrid, 
-  Flame, 
-  Sparkles, 
-  Package, 
-  Droplets, 
-  Flower2, 
-  HeadphonesIcon, 
-  CalendarCheck 
+import {
+  LayoutGrid,
+  Flame,
+  Sparkles,
+  Package,
+  Droplets,
+  Flower2,
+  HeadphonesIcon,
+  CalendarCheck
 } from 'lucide-react';
 
 export function MobileHero() {
@@ -28,16 +28,16 @@ export function MobileHero() {
     <section className="w-full bg-[#f0f5f2] pt-4 pb-6 px-4">
       {/* Mobile Banner */}
       <div className="relative w-full aspect-[21/9] rounded-xl overflow-hidden shadow-sm mb-6">
-        <Image 
-          src="/background.png" 
-          alt="Liora Care Mobile Banner" 
-          fill 
+        <Image
+          src="/background.png"
+          alt="Liora Care Mobile Banner"
+          fill
           className="object-cover"
         />
-        <Image 
-          src="/mountain.png" 
-          alt="Liora Care Mobile Banner Mountain" 
-          fill 
+        <Image
+          src="/mountain.png"
+          alt="Liora Care Mobile Banner Mountain"
+          fill
           className="object-cover object-bottom"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#326e51]/80 to-transparent flex flex-col justify-center px-6">
@@ -46,9 +46,9 @@ export function MobileHero() {
             Mỹ phẩm thuần chay thiên nhiên
           </p>
           <div className="mt-3">
-            <span className="bg-white text-[#326e51] text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+            <Link href="/products" className="inline-block bg-white text-[#326e51] text-xs font-bold px-4 py-1.5 rounded-full shadow-sm hover:bg-gray-50 transition active:scale-95 cursor-pointer">
               Mua Ngay
-            </span>
+            </Link>
           </div>
         </div>
       </div>
@@ -57,9 +57,9 @@ export function MobileHero() {
       <div className="bg-white rounded-xl p-4 shadow-sm">
         <div className="grid grid-cols-4 gap-y-6 gap-x-2">
           {categories.map((item, index) => (
-            <Link 
-              href={item.active ? item.href : "#"} 
-              key={index} 
+            <Link
+              href={item.active ? item.href : "#"}
+              key={index}
               className={`flex flex-col items-center gap-2 group ${!item.active ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-transform ${item.active ? 'group-hover:scale-110' : ''} ${item.color}`}>

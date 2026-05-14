@@ -104,14 +104,14 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-32 pb-12 md:pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
           {/* Left: Form (Col-span 2) */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-lg p-8 border border-[#e8e5dd] space-y-6">
               <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-                Shipping Address
+                Địa chỉ giao hàng
               </h2>
 
               <form id="checkout-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -123,7 +123,7 @@ export default function CheckoutPage() {
                       className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 transition font-semibold text-sm ${
                         errors.receiver_name ? 'border-red-300 focus:border-red-500' : 'border-[#e8e5dd] focus:border-[#7a9e8e]'
                       }`}
-                      placeholder="Receiver name"
+                      placeholder="Tên người nhận"
                     />
                     {errors.receiver_name && (
                       <p className="text-[10px] text-red-500 font-semibold">{errors.receiver_name.message}</p>
@@ -137,7 +137,7 @@ export default function CheckoutPage() {
                       className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 transition font-semibold text-sm ${
                         errors.receiver_phone ? 'border-red-300 focus:border-red-500' : 'border-[#e8e5dd] focus:border-[#7a9e8e]'
                       }`}
-                      placeholder="Phone number"
+                      placeholder="Số điện thoại"
                     />
                     {errors.receiver_phone && (
                       <p className="text-[10px] text-red-500 font-semibold">{errors.receiver_phone.message}</p>
@@ -164,7 +164,7 @@ export default function CheckoutPage() {
                     className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 transition font-semibold text-sm ${
                       errors.address_line ? 'border-red-300 focus:border-red-500' : 'border-[#e8e5dd] focus:border-[#7a9e8e]'
                     }`}
-                    placeholder="Street address (No., street, ward, district, city)"
+                    placeholder="Địa chỉ chi tiết (Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố)"
                   />
                   {errors.address_line && (
                     <p className="text-[10px] text-red-500 font-semibold">{errors.address_line.message}</p>
@@ -177,7 +177,7 @@ export default function CheckoutPage() {
                     {...register('note')}
                     rows={3}
                     className="w-full px-4 py-2 bg-white border border-[#e8e5dd] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7a9e8e]/20 focus:border-[#7a9e8e] transition resize-none font-semibold text-sm"
-                    placeholder="Order note (delivery guidelines, timing...)"
+                    placeholder="Ghi chú đơn hàng (hướng dẫn giao hàng, thời gian...)"
                   />
                 </div>
 
@@ -270,7 +270,7 @@ export default function CheckoutPage() {
           {/* Right: Order Summary Sticky Box (Col-span 1) */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg p-6 border border-[#e8e5dd] sticky top-24 space-y-6">
-              <h3 className="text-xl font-bold text-gray-900 tracking-tight">Order Summary</h3>
+              <h3 className="text-xl font-bold text-gray-900 tracking-tight">Tóm tắt đơn hàng</h3>
 
               {/* Items List */}
               <div className="space-y-4 max-h-96 overflow-y-auto pb-4 border-b border-[#e8e5dd]">
@@ -294,7 +294,7 @@ export default function CheckoutPage() {
                         </p>
                       )}
                       <p className="text-xs text-gray-500 mt-1">
-                        Qty: {item.quantity}
+                        SL: {item.quantity}
                       </p>
                       <p className="text-sm font-semibold text-gray-900 mt-1">
                         {(item.price * item.quantity).toLocaleString('vi-VN')}₫
@@ -307,19 +307,15 @@ export default function CheckoutPage() {
               {/* Pricing breakdown */}
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 font-semibold">Subtotal</span>
+                  <span className="text-gray-500 font-semibold">Tạm tính</span>
                   <span className="font-semibold text-gray-900">{total.toLocaleString('vi-VN')}₫</span>
-                </div>
-                <div className="flex justify-between text-sm items-center">
-                  <span className="text-gray-500 font-semibold">Shipping</span>
-                  <span className="text-[#7a9e8e] font-semibold uppercase text-[10px] bg-[#7a9e8e]/5 px-2 py-0.5 rounded border border-[#7a9e8e]/10">Free</span>
                 </div>
               </div>
 
               {/* Total Price & Submit Button */}
               <div className="pt-6 border-t border-[#e8e5dd] space-y-6">
                 <div className="flex justify-between items-baseline">
-                  <span className="font-semibold text-gray-900">Total</span>
+                  <span className="font-semibold text-gray-900">Tổng cộng</span>
                   <span className="text-2xl font-bold text-[#7a9e8e]">
                     {total.toLocaleString('vi-VN')}₫
                   </span>
@@ -334,12 +330,12 @@ export default function CheckoutPage() {
                   {mutation.isPending ? (
                     <Loader2 className="animate-spin" size={18} />
                   ) : (
-                    'Place Order'
+                    'Đặt hàng'
                   )}
                 </button>
 
                 <p className="text-[10px] text-center text-gray-400 font-semibold">
-                  By placing an order, you agree to SkinMatch's Shopping Terms
+                  Bằng việc đặt hàng, bạn đồng ý với Điều khoản mua sắm của SkinMatch
                 </p>
               </div>
             </div>

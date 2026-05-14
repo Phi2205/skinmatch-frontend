@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       {/* Desktop Hero */}
       <div className="hidden md:block">
         <Hero />
@@ -29,19 +29,12 @@ export default function Home() {
       <FlashSale />
 
       {/* Hot Products Section */}
-      <section className="py-16 bg-[#f5f6f8] border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#f0f5f2] text-[#326e51] rounded-full text-xs font-bold uppercase tracking-wider mb-3">
-              <Flame size={14} className="fill-[#326e51] text-[#326e51] animate-pulse" />
-              <span>Cực Kỳ Hot</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">
-              Sản Phẩm Hot Nhất
+      <section className="py-6 sm:py-16 bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+          <div className="mb-3 sm:mb-8 px-4 sm:px-0">
+            <h2 className="text-[20px] sm:text-3xl font-bold text-[#1a654d] tracking-tight">
+              Sản phẩm Hot
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
-              Khám phá các sản phẩm đang được săn đón và bán chạy nhất tại SkinMatch ngay hôm nay!
-            </p>
           </div>
 
           <HotProducts />
@@ -87,15 +80,12 @@ export default function Home() {
       </section> */}
 
       {/* Featured Products Section */}
-      <section className="py-16 bg-[#faf8f5]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Bestselling Products
+      <section className="py-6 sm:py-16 bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+          <div className="mb-3 sm:mb-8 px-4 sm:px-0">
+            <h2 className="text-[20px] sm:text-3xl font-bold text-[#1a654d] tracking-tight">
+              Sản phẩm bán chạy
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Discover our most-loved skincare essentials loved by thousands of customers
-            </p>
           </div>
 
           <BestSellers />

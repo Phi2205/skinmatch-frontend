@@ -129,14 +129,14 @@ export function ProfileTab({ user: propUser }: ProfileTabProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg p-8 border border-[#e8e5dd]">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+    <div className="bg-white rounded-lg p-4 lg:p-8 border border-[#e8e5dd]">
+      <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4 lg:mb-6">
         Thông tin tài khoản
       </h2>
 
       {/* Avatar Section */}
-      <div className="flex flex-col items-center gap-3 mb-8 pb-6 border-b border-[#e8e5dd]">
-        <div className="relative group w-24 h-24 rounded-full overflow-hidden border-2 border-[#7a9e8e]/30 shadow-md">
+      <div className="flex flex-col items-center gap-2 lg:gap-3 mb-6 lg:mb-8 pb-4 lg:pb-6 border-b border-[#e8e5dd]">
+        <div className="relative group w-20 h-20 lg:w-24 lg:h-24 rounded-full overflow-hidden border-2 border-[#7a9e8e]/30 shadow-md flex-shrink-0">
           {isUploadingAvatar ? (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white z-10">
               <Loader2 className="w-6 h-6 animate-spin" />

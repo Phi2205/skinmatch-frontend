@@ -62,14 +62,14 @@ export function OrdersTab({
     setReviewOrderAndItem(null);
   };
   return (
-    <div className="bg-white rounded-lg p-8 border border-[#e8e5dd]">
-      <div className="flex justify-between items-center mb-6 pb-4 border-b border-[#e8e5dd]">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Order History
+    <div className="bg-white rounded-lg p-4 lg:p-8 border border-[#e8e5dd]">
+      <div className="flex justify-between items-center mb-4 lg:mb-6 pb-4 border-b border-[#e8e5dd]">
+        <h2 className="text-xl lg:text-2xl font-bold text-gray-900">
+          Lịch sử đơn hàng
         </h2>
         {meta && (
-          <span className="text-sm text-gray-500">
-            Total {meta.totalItems} orders
+          <span className="text-xs lg:text-sm text-gray-500">
+            Tổng số {meta.totalItems} đơn hàng
           </span>
         )}
       </div>
@@ -83,7 +83,7 @@ export function OrdersTab({
             onClick={() => fetchOrders(ordersPage, 5)}
             className="px-4 py-2 bg-[#7a9e8e] text-white rounded-lg hover:bg-[#5a7a6b] transition text-sm font-semibold cursor-pointer"
           >
-            Try Again
+            Thử lại
           </button>
         </div>
       ) : orders.length === 0 ? (
@@ -91,22 +91,22 @@ export function OrdersTab({
           <div className="w-16 h-16 bg-[#f5f2ed] rounded-full flex items-center justify-center mx-auto mb-4">
             <Package className="w-8 h-8 text-gray-400" />
           </div>
-          <p className="text-gray-600 mb-6">
-            You haven&apos;t placed any orders yet.
+          <p className="text-gray-600 mb-6 text-sm lg:text-base">
+            Bạn chưa có đơn hàng nào.
           </p>
           <Link
             href="/products"
-            className="inline-block px-6 py-2 bg-[#7a9e8e] text-white font-semibold rounded-lg hover:bg-[#5a7a6b] transition cursor-pointer"
+            className="inline-block px-6 py-2 bg-[#7a9e8e] text-white font-semibold rounded-lg hover:bg-[#5a7a6b] transition cursor-pointer text-sm lg:text-base"
           >
-            Start Shopping
+            Mua sắm ngay
           </Link>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4 lg:space-y-6">
           {orders.map((order) => {
             const orderDate = new Date(order.created_at).toLocaleDateString('vi-VN', {
               year: 'numeric',
-              month: 'long',
+              month: 'short',
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit'
@@ -142,31 +142,31 @@ export function OrdersTab({
                 {/* Order Header Info */}
                 <div 
                   onClick={() => toggleOrder(order.id)}
-                  className="bg-gray-50/50 px-6 py-4 border-b border-[#e8e5dd] flex flex-wrap justify-between items-center gap-4 cursor-pointer hover:bg-gray-100/50 transition-colors"
+                  className="bg-gray-50/50 px-4 py-3 lg:px-6 lg:py-4 border-b border-[#e8e5dd] flex flex-wrap justify-between items-center gap-2 lg:gap-4 cursor-pointer hover:bg-gray-100/50 transition-colors"
                 >
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                  <div className="flex flex-wrap items-center gap-x-4 lg:gap-x-6 gap-y-1">
                     <div>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order ID</span>
-                      <p className="text-sm font-bold text-gray-900">#{order.id}</p>
+                      <span className="text-[9px] lg:text-[10px] font-bold text-gray-400 uppercase tracking-widest">Mã đơn</span>
+                      <p className="text-xs lg:text-sm font-bold text-gray-900">#{order.id}</p>
                     </div>
                     <div>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Placed On</span>
-                      <p className="text-sm text-gray-700 flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-[9px] lg:text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ngày đặt</span>
+                      <p className="text-xs lg:text-sm text-gray-700 flex items-center gap-1">
+                        <Calendar className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-gray-400" />
                         {orderDate}
                       </p>
                     </div>
                     <div>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Payment Method</span>
-                      <p className="text-sm text-gray-700 flex items-center gap-1">
-                        <CreditCard className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-[9px] lg:text-[10px] font-bold text-gray-400 uppercase tracking-widest">Thanh toán</span>
+                      <p className="text-xs lg:text-sm text-gray-700 flex items-center gap-1">
+                        <CreditCard className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-gray-400" />
                         {order.payment_method}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <span className={`px-2.5 py-1 text-xs font-bold rounded-full border ${statusClasses}`}>
+                  <div className="flex items-center gap-2 lg:gap-3">
+                    <span className={`px-2 py-0.5 lg:px-2.5 lg:py-1 text-[11px] lg:text-xs font-bold rounded-full border ${statusClasses}`}>
                       {order.status}
                     </span>
                     {expandedOrders[order.id] ? (
@@ -179,7 +179,7 @@ export function OrdersTab({
 
                 {/* Order Items */}
                 {expandedOrders[order.id] && (
-                  <div className="divide-y divide-gray-100 px-6">
+                  <div className="divide-y divide-gray-100 px-4 lg:px-6">
                     {(() => {
                       const itemsList = order.items || (order as any).order_items || [];
                       if (itemsList.length === 0) {
@@ -219,7 +219,7 @@ export function OrdersTab({
                                 </span>
                               )}
                               <p className="text-xs text-gray-500 mt-1">
-                                Qty: {item.quantity} × {item.price.toLocaleString('vi-VN')}₫
+                                SL: {item.quantity} × {item.price.toLocaleString('vi-VN')}₫
                                 {volumeText}
                               </p>
                             </div>
@@ -256,12 +256,12 @@ export function OrdersTab({
                 {/* Order Footer Actions & Total */}
                 <div className={`px-6 py-4 bg-gray-50/20 ${expandedOrders[order.id] ? 'border-t border-[#e8e5dd]' : ''} flex flex-wrap justify-between items-center gap-4`}>
                   <div className="text-sm text-gray-600">
-                    Recipient: <span className="font-semibold text-gray-900">{order.receiver_name}</span> ({order.receiver_phone})
+                    Người nhận: <span className="font-semibold text-gray-900">{order.receiver_name}</span> ({order.receiver_phone})
                   </div>
 
                   <div className="flex items-center gap-6">
                     <div className="text-right">
-                      <span className="text-xs text-gray-500 font-medium">Total Price:</span>
+                      <span className="text-xs text-gray-500 font-medium">Tổng tiền:</span>
                       <p className="text-lg font-black text-[#7a9e8e]">
                         {order.total_price.toLocaleString('vi-VN')}₫
                       </p>
@@ -274,7 +274,7 @@ export function OrdersTab({
                         rel="noopener noreferrer"
                         className="px-4 py-2 bg-[#7a9e8e] text-white text-xs font-bold rounded-lg hover:bg-[#5a7a6b] transition flex items-center gap-1.5 shadow-sm shadow-[#7a9e8e]/20"
                       >
-                        Pay Now
+                        Thanh toán ngay
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     )}
