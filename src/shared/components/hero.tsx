@@ -142,7 +142,7 @@ export function Hero() {
                   className="text-center space-y-1 mt-23 px-2"
                 >
                   <p className="text-md font-bold text-white/80 pt-2 leading-tight flex flex-wrap justify-center">
-                    {"Pure care, powered by nature.".split(" ").map((word, i) => (
+                    {"Chăm sóc tinh khiết, sức mạnh từ tự nhiên.".split(" ").map((word, i) => (
                       <motion.span
                         key={i}
                         initial={{ opacity: 0, y: 10 }}
@@ -167,7 +167,7 @@ export function Hero() {
 
       {/* Scroll Indicator */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-500 opacity-50">
-        <span className="text-[10px] uppercase tracking-widest">Scroll</span>
+        <span className="text-[10px] uppercase tracking-widest">Cuộn xuống</span>
         <div className="w-[1px] h-12 bg-gradient-to-b from-gray-500 to-transparent" />
       </div>
 

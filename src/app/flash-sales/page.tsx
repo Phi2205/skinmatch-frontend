@@ -80,7 +80,7 @@ export default function FlashSalesLandingPage() {
     <div className="min-h-screen bg-[#faf8f5] flex flex-col">
       <Header />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-32 pb-16">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 md:pt-32 pb-12 md:pb-16">
         {isLoading ? (
           <div>
             {/* Banner/Header Section Skeleton */}

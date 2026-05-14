@@ -187,16 +187,16 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
       if (isCheckoutRequested) {
         const paramVariant = searchParams.get('variant');
         const paramQuantity = searchParams.get('quantity');
-        
+
         if (paramVariant && paramVariant !== 'null' && paramVariant !== '') {
           setSelectedVariantId(parseInt(paramVariant));
         }
         if (paramQuantity) {
           setQuantity(parseInt(paramQuantity));
         }
-        
+
         setIsCheckoutOpen(true);
-        
+
         // Clean up URL search parameters to avoid re-triggering checkout on reload
         const newUrl = window.location.pathname;
         window.history.replaceState({}, '', newUrl);
@@ -291,6 +291,10 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
 
   const discount = currentOriginalPrice ? Math.round(((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100) : 0;
   const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
     if (!apiProduct) return;
     try {
       await addItem(apiProduct, quantity, selectedVariantId || undefined);
@@ -376,9 +380,9 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
         )}
       </AnimatePresence>
 
-      <main className="max-w-[1240px] mx-auto px-4 pt-24 pb-8 md:pt-28 md:pb-12">
+      <main className="max-w-[1240px] mx-auto px-4 md:pt-28 pb-8 md:pb-12">
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-1 text-[13px] text-gray-500 mb-6 overflow-x-auto whitespace-nowrap pb-2 scrollbar-hide">
+        <nav className="hidden md:flex items-center gap-1 text-[13px] text-gray-500 mb-6 overflow-x-auto whitespace-nowrap pb-2 scrollbar-hide">
           <Link href="/" className="hover:text-[#326e51] transition-colors">Trang chủ</Link>
           <ChevronRight size={14} />
           <Link href="/products" className="hover:text-[#326e51] transition-colors">Sản phẩm</Link>
@@ -387,11 +391,12 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
         </nav>
 
         {/* Product Info Section */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+        <div className="bg-white rounded-t-none lg:rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
             {/* Gallery */}
-            <div className="lg:col-span-5 p-6 border-r border-gray-50">
-              <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-50 group">
+            <div className="lg:col-span-5 p-0 lg:p-6 border-r border-gray-50">
+              {/* Desktop Gallery View */}
+              <div className="hidden lg:block relative aspect-square rounded-2xl overflow-hidden bg-gray-50 group">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeImageIndex}
@@ -414,7 +419,45 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
                   <button onClick={() => setActiveImageIndex(prev => (prev < product.images.length - 1 ? prev + 1 : 0))} className="p-2 bg-white/90 rounded-full shadow-lg cursor-pointer"><ChevronRight size={20} /></button>
                 </div>
               </div>
-              <div className="flex gap-3 mt-6 overflow-x-auto pb-2 scrollbar-hide">
+
+              {/* Mobile Swipeable Full-Width Gallery View */}
+              <div className="-mx-4 lg:hidden relative w-[calc(100%+32px)] aspect-square bg-gray-50 overflow-hidden">
+                <div 
+                  onScroll={(e) => {
+                    const clientWidth = e.currentTarget.clientWidth;
+                    if (clientWidth > 0) {
+                      const index = Math.round(e.currentTarget.scrollLeft / clientWidth);
+                      setActiveImageIndex(index);
+                    }
+                  }}
+                  className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide w-full h-full"
+                >
+                  {product.images.map((img) => (
+                    <div key={img.id} className="w-full h-full flex-shrink-0 snap-center relative">
+                      <Image
+                        src={img.image_url}
+                        alt={product.name}
+                        fill
+                        className="object-contain"
+                        priority
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Mobile Dots Indicator */}
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-1.5 z-10">
+                  {product.images.map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${activeImageIndex === idx ? 'bg-[#326e51] w-5 shadow' : 'bg-gray-300/80 w-1.5'}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop Thumbnails */}
+              <div className="hidden lg:flex gap-3 mt-6 overflow-x-auto pb-2 scrollbar-hide">
                 {product.images.map((img, idx) => (
                   <button
                     key={img.id}
@@ -429,19 +472,19 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
             </div>
 
             {/* Info */}
-            <div className="lg:col-span-7 p-8 md:p-10">
-              <div className="space-y-6">
+            <div className="lg:col-span-7 p-4 sm:p-6 md:p-10">
+              <div className="space-y-4 sm:space-y-6">
                 <div className="flex items-center justify-between">
-                  <span className="text-[#326e51] font-bold uppercase tracking-wider text-sm">{product.brand}</span>
+                  <span className="text-[#326e51] font-bold uppercase tracking-wider text-xs sm:text-sm">{product.brand}</span>
                   <div className="flex gap-2">
                     {product.badges.map(badge => (
                       <span key={badge.id} className="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-black uppercase rounded-md border border-red-100">{badge.name}</span>
                     ))}
                   </div>
                 </div>
-                <h1 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">{product.name}</h1>
+                <h1 className="text-xl md:text-3xl font-black text-gray-900 leading-tight">{product.name}</h1>
 
-                <div className="flex items-center gap-6 border-y border-gray-50 py-4">
+                <div className="flex items-center gap-4 sm:gap-6 border-y border-gray-50 py-3 sm:py-4">
                   <div className="flex items-center gap-1">
                     <div className="flex gap-0.5">
                       {[1, 2, 3, 4, 5].map((starVal) => {
@@ -461,10 +504,10 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
                         );
                       })}
                     </div>
-                    <span className="text-sm font-bold text-gray-900">{product.rating || '0.0'}</span>
+                    <span className="text-xs sm:text-sm font-bold text-gray-900">{product.rating || '0.0'}</span>
                   </div>
-                  <span className="text-sm text-gray-500 font-medium">{(product.reviews_count ?? product.reviewsCount ?? 0)} Đánh giá</span>
-                  <span className="text-sm text-gray-500 font-medium">Đã bán {product.soldCount}+</span>
+                  <span className="text-xs sm:text-sm text-gray-500 font-medium">{(product.reviews_count ?? product.reviewsCount ?? 0)} Đánh giá</span>
+                  <span className="text-xs sm:text-sm text-gray-500 font-medium">Đã bán {product.soldCount}+</span>
                 </div>
 
                 {hasActiveFlashSale && activeFlashSale && (
@@ -501,12 +544,12 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
                   </div>
                 )}
 
-                <div className="p-6 bg-gray-50 rounded-2xl space-y-4">
-                  <div className="flex items-baseline gap-4">
-                    <span className="text-4xl font-black text-[#326e51]">{currentPrice.toLocaleString('vi-VN')}₫</span>
+                <div className="p-4 sm:p-6 bg-gray-50 rounded-2xl space-y-4">
+                  <div className="flex items-baseline gap-2 sm:gap-4">
+                    <span className="text-2xl md:text-4xl font-black text-[#326e51]">{currentPrice.toLocaleString('vi-VN')}₫</span>
                     {currentOriginalPrice && (
                       <>
-                        <span className="text-lg text-gray-400 line-through">{currentOriginalPrice.toLocaleString('vi-VN')}₫</span>
+                        <span className="text-sm md:text-lg text-gray-400 line-through">{currentOriginalPrice.toLocaleString('vi-VN')}₫</span>
                         <span className="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded-lg">-{discount}%</span>
                       </>
                     )}
@@ -583,19 +626,19 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-3 h-auto sm:h-14 pt-4">
+                <div className="flex gap-2 sm:gap-3 h-12 sm:h-14 pt-4">
                   <button
                     onClick={handleAddToCart}
-                    className="flex-1 border-2 border-[#326e51] text-[#326e51] font-black rounded-2xl hover:bg-gray-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="flex-1 border-2 border-[#326e51] text-[#326e51] text-[11px] sm:text-sm font-black rounded-xl sm:rounded-2xl hover:bg-gray-50 transition-all flex items-center justify-center gap-1 sm:gap-2 cursor-pointer p-1 sm:p-0"
                   >
-                    <ShoppingCart />
-                    THÊM GIỎ HÀNG
+                    <ShoppingCart size={16} />
+                    <span>THÊM GIỎ HÀNG</span>
                   </button>
                   <button
                     onClick={handleBuyNow}
-                    className="flex-1 bg-[#326e51] text-white font-black rounded-2xl hover:bg-[#25543d] transition-all shadow-lg shadow-[#326e51]/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                    className="flex-1 bg-[#326e51] text-white text-[11px] sm:text-sm font-black rounded-xl sm:rounded-2xl hover:bg-[#25543d] transition-all shadow-lg shadow-[#326e51]/20 flex items-center justify-center gap-1 sm:gap-2 cursor-pointer active:scale-95 p-1 sm:p-0"
                   >
-                    MUA NGAY
+                    <span>MUA NGAY</span>
                   </button>
                 </div>
               </div>
@@ -695,14 +738,14 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
 
             {/* Reviews Section */}
             <section id="reviews" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6 md:p-8 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
-                <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Đánh giá từ khách hàng</h3>
-                <div className="flex items-center gap-2">
-                  <Star className="fill-yellow-400 text-yellow-400" size={18} />
-                  <span className="font-bold text-gray-900">
+              <div className="p-4 sm:p-6 md:p-8 border-b border-gray-50 bg-gray-50/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                <h3 className="text-base sm:text-lg font-black text-gray-900 uppercase tracking-tight">Đánh giá từ khách hàng</h3>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Star className="fill-yellow-400 text-yellow-400" size={16} />
+                  <span className="font-bold text-gray-900 text-sm sm:text-base">
                     {product.rating || '0.0'}/5
                   </span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-xs sm:text-sm text-gray-500">
                     ({product.reviews_count ?? product.reviewsCount ?? 0} nhận xét)
                   </span>
                 </div>
@@ -742,15 +785,15 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
                         : 'Vừa xong';
 
                       return (
-                        <div key={review.id} className="pb-8 border-b border-gray-50 last:border-0 last:pb-0">
+                        <div key={review.id} className="pb-6 sm:pb-8 border-b border-gray-50 last:border-0 last:pb-0">
                           <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-[#326e51]/10 text-[#326e51] rounded-full flex items-center justify-center font-bold text-sm">
+                            <div className="flex items-center gap-2.5 sm:gap-3">
+                              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#326e51]/10 text-[#326e51] rounded-full flex items-center justify-center font-bold text-xs sm:text-sm flex-shrink-0">
                                 {userInitial}
                               </div>
                               <div>
-                                <p className="text-sm font-black text-gray-900">{userName}</p>
-                                <div className="flex gap-0.5">
+                                <p className="text-xs sm:text-sm font-black text-gray-900">{userName}</p>
+                                <div className="flex gap-0.5 mt-0.5">
                                   {[...Array(5)].map((_, i) => (
                                     <Star
                                       key={i}
@@ -763,20 +806,20 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
                                 </div>
                               </div>
                             </div>
-                            <span className="text-[10px] font-bold text-gray-400">{formattedDate}</span>
+                            <span className="text-[9px] sm:text-[10px] font-bold text-gray-400 pt-1">{formattedDate}</span>
                           </div>
 
-                          <p className="text-sm text-gray-600 leading-relaxed pl-13 whitespace-pre-line">
+                          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed pl-10 sm:pl-13 whitespace-pre-line">
                             {review.comment || 'Khách hàng không để lại bình luận.'}
                           </p>
 
                           {/* Render review images dynamically */}
                           {review.review_images && review.review_images.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-3 pl-13">
+                            <div className="flex flex-wrap gap-2 mt-3 pl-10 sm:pl-13">
                               {review.review_images.map((img) => (
                                 <div
                                   key={img.id}
-                                  className="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex-shrink-0 cursor-zoom-in hover:scale-105 transition-transform duration-200"
+                                  className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex-shrink-0 cursor-zoom-in hover:scale-105 transition-transform duration-200"
                                 >
                                   <Image
                                     src={img.image_url}
@@ -843,26 +886,26 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
             {/* Similar Products Section */}
             {(isSimilarLoading || (similarProducts && similarProducts.length > 0)) && (
               <section className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 md:p-8 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
-                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Sản phẩm tương tự</h3>
+                <div className="p-4 sm:p-6 md:p-8 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
+                  <h3 className="text-base sm:text-lg font-black text-gray-900 uppercase tracking-tight">Sản phẩm tương tự</h3>
                 </div>
-                <div className="p-8">
+                <div className="p-4 sm:p-8">
                   {isSimilarLoading ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                       {[...Array(4)].map((_, idx) => (
-                        <div key={idx} className="bg-white rounded-2xl overflow-hidden border border-gray-100 p-5 space-y-4 animate-pulse">
+                        <div key={idx} className="bg-white rounded-2xl overflow-hidden border border-gray-100 p-3 sm:p-5 space-y-3 sm:space-y-4 animate-pulse">
                           <div className="aspect-square bg-gray-100 rounded-xl w-full" />
                           <div className="h-4 bg-gray-100 rounded w-1/3" />
                           <div className="h-5 bg-gray-100 rounded w-full" />
                           <div className="flex justify-between items-center pt-2">
                             <div className="h-6 bg-gray-100 rounded w-1/2" />
-                            <div className="w-8 h-8 rounded-full bg-gray-100" />
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-100" />
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                       {similarProducts.map((p) => {
                         const minPrice = p.price || 0;
                         const productImg = p.image_url || p.images?.[0]?.image_url || '/placeholder.png';
@@ -870,37 +913,37 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
                           <Link key={p.id} href={`/products/${p.slug}`} className="group h-full block">
                             <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 h-full flex flex-col border border-gray-100">
                               {/* Image Container */}
-                              <div className="relative aspect-square bg-[#f8f9fa] overflow-hidden p-6">
+                              <div className="relative aspect-square bg-[#f8f9fa] overflow-hidden p-3 sm:p-6">
                                 <Image
                                   src={productImg}
                                   alt={p.name}
                                   fill
-                                  className="object-contain p-4 group-hover:scale-110 transition-transform duration-700 ease-out"
+                                  className="object-contain p-2 sm:p-4 group-hover:scale-110 transition-transform duration-700 ease-out"
                                 />
                               </div>
 
                               {/* Content */}
-                              <div className="p-5 flex-1 flex flex-col">
-                                <div className="flex items-center justify-between mb-3">
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-[#7a9e8e] bg-[#7a9e8e]/5 px-2 py-1 rounded">
+                              <div className="p-3 sm:p-5 flex-1 flex flex-col">
+                                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#7a9e8e] bg-[#7a9e8e]/5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded truncate max-w-[70%]">
                                     {p.categories?.[0]?.name || 'Sản phẩm'}
                                   </span>
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-[10px] font-bold text-gray-900">★ 4.9</span>
+                                  <div className="flex items-center gap-0.5">
+                                    <span className="text-[9px] sm:text-[10px] font-bold text-gray-900">★ 4.9</span>
                                   </div>
                                 </div>
 
-                                <h3 className="font-bold text-gray-900 mb-2 group-hover:text-[#326e51] transition-colors line-clamp-2 leading-snug flex-1 text-xs">
+                                <h3 className="font-bold text-gray-900 mb-2 group-hover:text-[#326e51] transition-colors line-clamp-2 leading-snug flex-1 text-[11px] sm:text-xs">
                                   {p.name}
                                 </h3>
 
-                                <div className="mt-auto pt-4 border-t border-gray-50">
-                                  <div className="flex justify-between items-center gap-2">
-                                    <span className="text-sm font-black text-[#326e51]">
+                                <div className="mt-auto pt-3 sm:pt-4 border-t border-gray-50">
+                                  <div className="flex justify-between items-center gap-1 sm:gap-2">
+                                    <span className="text-xs sm:text-sm font-black text-[#326e51]">
                                       {minPrice.toLocaleString('vi-VN')}₫
                                     </span>
-                                    <button className="w-8 h-8 bg-[#326e51] text-white rounded-full flex items-center justify-center hover:bg-[#25543d] transition-all shadow-md active:scale-95 group-hover:rotate-90 cursor-pointer">
-                                      <Plus className="w-4 h-4" />
+                                    <button className="w-6 h-6 sm:w-8 sm:h-8 bg-[#326e51] text-white rounded-full flex items-center justify-center hover:bg-[#25543d] transition-all shadow-md active:scale-95 group-hover:rotate-90 cursor-pointer flex-shrink-0">
+                                      <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                                     </button>
                                   </div>
                                 </div>
@@ -1016,7 +1059,7 @@ function ProductContentComponent({ params }: { params: Promise<{ slug: string }>
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.5 }}
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-24 right-8 w-12 h-12 bg-[#326e51] text-white rounded-full shadow-2xl flex items-center justify-center cursor-pointer z-50 hover:bg-[#25543d] transition-all border-4 border-white/20 backdrop-blur-sm"
+            className="fixed bottom-40 md:bottom-24 right-4 md:right-8 w-12 h-12 bg-[#326e51] text-white rounded-full shadow-2xl flex items-center justify-center cursor-pointer z-50 hover:bg-[#25543d] transition-all border-4 border-white/20 backdrop-blur-sm"
           >
             <ArrowUp size={24} />
           </motion.button>
