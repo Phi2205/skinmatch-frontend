@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/authContext';
 import { Message, RecommendedProduct } from '../types';
 import { toast } from 'sonner';
 import { getChatHistory, askChatbotStream, deleteChatHistory } from '../services/chatbot.service';
+import { refresh as refreshApi } from '@/modules/auth/services/auth.service';
 
 export function useChatbot() {
   const { user, isAuthenticated } = useAuth();
@@ -38,7 +39,7 @@ export function useChatbot() {
   // Fetch chat history from backend database (authenticated users only)
   const fetchChatHistory = useCallback(async () => {
     if (!sessionId || !isAuthenticated) return;
-    
+
     try {
       setIsLoading(true);
       const data = await getChatHistory(sessionId);
@@ -146,7 +147,17 @@ export function useChatbot() {
 
     try {
       // Fetch stream from backend using chatbot service
-      const response = await askChatbotStream(textToSend, sessionId || 'phien-chat-hien-tai');
+      let response = await askChatbotStream(textToSend, sessionId || 'phien-chat-hien-tai');
+
+      // Specific requirement: if 403 Forbidden, try to refresh token once and retry
+      if (response.status === 403 || response.status === 401) {
+        console.log('Chatbot request returned 403, attempting token refresh and retry...');
+        const refreshResult = await refreshApi();
+        if (refreshResult?.success) {
+          // Retry the request after successful refresh
+          response = await askChatbotStream(textToSend, sessionId || 'phien-chat-hien-tai');
+        }
+      }
 
       if (!response.ok) {
         throw new Error(`Lỗi kết nối máy chủ (${response.status})`);

@@ -16,7 +16,7 @@ export function ChatbotWidget() {
   }
 
   return (
-    <div className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-50 flex flex-col items-end gap-3 font-sans">
+    <div className={`fixed z-50 flex flex-col items-end gap-3 font-sans transition-all duration-300 ${isOpen ? 'inset-0 md:inset-auto md:bottom-6 md:right-6' : 'bottom-24 md:bottom-6 right-4 md:right-6'}`}>
 
       {/* Floating Chat Window */}
       <AnimatePresence>
@@ -26,7 +26,7 @@ export function ChatbotWidget() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.85, y: 40 }}
             transition={{ type: 'spring', damping: 20, stiffness: 260 }}
-            className="origin-bottom-right"
+            className="fixed inset-0 z-[60] md:relative md:inset-auto md:z-auto origin-bottom-right"
           >
             <ChatbotWindow isFullPage={false} onClose={() => setIsOpen(false)} />
           </motion.div>
@@ -40,8 +40,8 @@ export function ChatbotWidget() {
         whileTap={{ scale: 0.95 }}
         className={`relative w-14 h-14 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 ${
           isOpen
-            ? 'bg-slate-800 text-white'
-            : 'bg-gradient-to-tr from-[#7a9e8e] via-[#6a8e7e] to-[#5a7a6b] text-white hover:brightness-110'
+            ? 'bg-slate-800 text-white hidden md:flex'
+            : 'bg-gradient-to-tr from-[#7a9e8e] via-[#6a8e7e] to-[#5a7a6b] text-white hover:brightness-110 flex'
         }`}
         style={{ touchAction: 'manipulation' }}
       >

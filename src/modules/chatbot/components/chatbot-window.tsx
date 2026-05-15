@@ -24,8 +24,8 @@ const STARTER_QUESTIONS = [
     short: 'Niacinamide + BHA'
   },
   {
-    text: 'Gợi ý kem chống nắng kiềm dầu, không nâng tông dưới 500k',
-    short: 'Kem chống nắng <500k'
+    text: 'Gợi ý sữa rữa mặt cho da dầu mụn nhạy cảm <100k',
+    short: 'Sữa rữa mặt <100k'
   },
   {
     text: 'Làm sao để xác định đúng loại da của mình?',
@@ -157,10 +157,10 @@ export function ChatbotWindow({ isFullPage = false, onClose }: ChatbotWindowProp
   };
 
   return (
-    <div className={`flex flex-col bg-slate-50/50 backdrop-blur-xl border border-slate-200/50 rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 ${isFullPage ? 'h-[calc(100vh-140px)] min-h-[500px]' : 'h-[580px] w-[380px] sm:w-[420px]'
+    <div className={`flex flex-col bg-white sm:bg-slate-50/50 sm:backdrop-blur-xl border border-slate-200/50 rounded-none sm:rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 ${isFullPage ? 'h-[calc(100vh-140px)] min-h-[500px]' : 'h-[100dvh] w-full sm:h-[580px] sm:w-[380px] md:w-[420px]'
       }`}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#7a9e8e] to-[#5a7a6b] text-white px-5 py-4 flex items-center justify-between shadow-sm">
+      <div className="bg-gradient-to-r from-[#7a9e8e] to-[#5a7a6b] text-white px-5 pt-16 sm:pt-4 pb-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-inner">
@@ -342,7 +342,7 @@ export function ChatbotWindow({ isFullPage = false, onClose }: ChatbotWindowProp
       </div>
 
       {/* Input Form */}
-      <div className="p-3 bg-white border-t border-slate-100 flex items-center gap-2 shadow-inner">
+      <div className="p-3 pb-8 sm:pb-3 bg-white border-t border-slate-100 flex items-center gap-2 shadow-inner">
         <input
           type="text"
           value={input}
