@@ -33,7 +33,7 @@ export function Hero() {
             className="object-cover object-bottom"
           />
         </motion.div>
-        {/* Subtle radial gradient to make content pop */}  
+        {/* Subtle radial gradient to make content pop */}
         <div className="absolute inset-0 bg-radial-gradient from-transparent to-white/10" />
       </div>
 
@@ -139,10 +139,10 @@ export function Hero() {
                   </Link>
                 </motion.div>
                 <motion.div
-                  className="text-center space-y-1 mt-23 px-2"
+                  className="text-center space-y-1 mt-23"
                 >
-                  <p className="text-md font-bold text-white/80 pt-2 leading-tight flex flex-wrap justify-center">
-                    {"Chăm sóc tinh khiết, sức mạnh từ tự nhiên.".split(" ").map((word, i) => (
+                  <p className="text-md md:text-md font-bold text-white/80 pt-2 leading-tight flex flex-wrap justify-center">
+                    {"Pure care, power from nature.".split(" ").map((word, i) => (
                       <motion.span
                         key={i}
                         initial={{ opacity: 0, y: 10 }}
