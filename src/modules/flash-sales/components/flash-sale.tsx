@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingBag, ChevronLeft, ChevronRight, Loader2, Flame } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { getActiveFlashSales, getCampaignItems } from '../services/flash-sale.service';
 import { FlashSaleCampaign, FlashSaleItem, FlashSaleProduct } from '../types/flash-sale.type';
 
@@ -12,51 +12,19 @@ const formatPrice = (price: number) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 };
 
-export function FlashSale() {
+function CountdownTimer({ endAt }: { endAt: string }) {
   const [timeLeft, setTimeLeft] = useState({
     hours: 0,
     minutes: 0,
     seconds: 0,
   });
 
-  const [page] = useState(1);
-  const limit = 20;
-
-  // 1. Fetch active flash sale campaigns
-  const { data: activeCampaignsResponse, isLoading: isActiveLoading } = useQuery({
-    queryKey: ['activeFlashSales'],
-    queryFn: () => getActiveFlashSales(),
-  });
-
-  const campaigns: FlashSaleCampaign[] = activeCampaignsResponse?.data
-    ? (Array.isArray(activeCampaignsResponse.data)
-        ? activeCampaignsResponse.data
-        : (activeCampaignsResponse.data as any).items || [])
-    : [];
-
-  const campaign = campaigns[0];
-  const campaignId = campaign?.id;
-
-  // 2. Fetch products of that specific active campaign (paginated)
-  const { data: campaignItemsResponse, isLoading: isItemsLoading } = useQuery({
-    queryKey: ['campaignItems', campaignId, page],
-    queryFn: () => getCampaignItems(campaignId!, { page, limit }),
-    enabled: !!campaignId,
-  });
-
-  const isLoading = isActiveLoading || (!!campaignId && isItemsLoading);
-
-  const displayItems: FlashSaleProduct[] = campaignItemsResponse?.data?.items || [];
-
-  // Ref and scroll handlers for slider
-  const scrollRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
-    if (!campaign?.end_at) return;
+    if (!endAt) return;
 
     const updateTimer = () => {
       const now = new Date().getTime();
-      const endTime = new Date(campaign.end_at).getTime();
+      const endTime = new Date(endAt).getTime();
       const diff = endTime - now;
 
       if (diff <= 0) {
@@ -71,15 +39,121 @@ export function FlashSale() {
       setTimeLeft({ hours, minutes, seconds });
     };
 
-    updateTimer(); // Initial call
+    updateTimer();
     const timer = setInterval(updateTimer, 1000);
-
     return () => clearInterval(timer);
-  }, [campaign?.end_at]);
+  }, [endAt]);
+
+  return (
+    <div className="flex items-center gap-1 sm:ml-2">
+      <span className="bg-black/80 text-white text-[10px] sm:text-sm font-bold px-1.5 py-0.5 rounded min-w-[20px] text-center shadow-inner">
+        {String(timeLeft.hours).padStart(2, '0')}
+      </span>
+      <span className="text-white font-bold text-xs sm:text-sm">:</span>
+      <span className="bg-black/80 text-white text-[10px] sm:text-sm font-bold px-1.5 py-0.5 rounded min-w-[20px] text-center shadow-inner">
+        {String(timeLeft.minutes).padStart(2, '0')}
+      </span>
+      <span className="text-white font-bold text-xs sm:text-sm">:</span>
+      <span className="bg-black/80 text-white text-[10px] sm:text-sm font-bold px-1.5 py-0.5 rounded min-w-[20px] text-center shadow-inner">
+        {String(timeLeft.seconds).padStart(2, '0')}
+      </span>
+    </div>
+  );
+}
+
+export function FlashSale() {
+  const limit = 20;
+
+  // 1. Fetch active flash sale campaigns
+  const { data: activeCampaignsResponse, isLoading: isActiveLoading } = useQuery({
+    queryKey: ['activeFlashSales'],
+    queryFn: () => getActiveFlashSales(),
+  });
+
+  const campaigns: FlashSaleCampaign[] = activeCampaignsResponse?.data
+    ? (Array.isArray(activeCampaignsResponse.data)
+      ? activeCampaignsResponse.data
+      : (activeCampaignsResponse.data as any).items || [])
+    : [];
+
+  const campaign = campaigns[0];
+  const campaignId = campaign?.id;
+
+  // 2. Fetch products of that specific active campaign (paginated)
+  const {
+    data: infiniteCampaignItems,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isItemsLoading,
+  } = useInfiniteQuery({
+    queryKey: ['campaignItems', campaignId],
+    queryFn: ({ pageParam = 1 }) => {
+      console.log(`[FlashSale] Đang tải trang: ${pageParam}`);
+      return getCampaignItems(campaignId!, { page: pageParam, limit });
+    },
+    enabled: !!campaignId,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const meta = lastPage.data?.meta;
+      console.log('[FlashSale] API Meta:', meta);
+      if (!meta) return undefined;
+      
+      // Hỗ trợ nhiều định dạng meta khác nhau (lastPage, pageCount, totalPages)
+      const currentPage = Number(meta.page);
+      const totalPages = Number(meta.lastPage || meta.pageCount || meta.totalPages || 0);
+      
+      console.log(`[FlashSale] Check phân trang: Trang hiện tại ${currentPage} / Tổng số ${totalPages}`);
+      return currentPage < totalPages ? currentPage + 1 : undefined;
+    },
+  });
+
+  const isLoading = isActiveLoading || (!!campaignId && isItemsLoading);
+
+  const displayItems: FlashSaleProduct[] = infiniteCampaignItems?.pages.flatMap((page) => page.data?.items || []) || [];
+
+  console.log('displayItems', displayItems);
+  // Ref and scroll handlers for slider
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Thêm log trạng thái Infinite Query
+  useEffect(() => {
+    console.log(`[FlashSale] Trạng thái: hasNextPage=${hasNextPage}, isFetchingNextPage=${isFetchingNextPage}`);
+  }, [hasNextPage, isFetchingNextPage]);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 5);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5 || hasNextPage);
+
+      // Auto load more when near the end
+      if (scrollLeft + clientWidth > scrollWidth - 300 && hasNextPage && !isFetchingNextPage) {
+        console.log('[FlashSale] Tự động kích hoạt Load More (đang cuộn gần cuối)');
+        fetchNextPage();
+      }
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [displayItems, hasNextPage, isFetchingNextPage]);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const { scrollLeft, clientWidth } = scrollRef.current;
+      const { scrollLeft, clientWidth, scrollWidth } = scrollRef.current;
+      
+      // If clicking right at the end, trigger load more
+      if (direction === 'right' && scrollLeft + clientWidth >= scrollWidth - 10 && hasNextPage && !isFetchingNextPage) {
+        console.log('[FlashSale] Kích hoạt Load More khi nhấn nút Next');
+        fetchNextPage();
+        return;
+      }
+
       const scrollAmount = clientWidth * 0.8;
       const targetScroll = direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount;
       scrollRef.current.scrollTo({
@@ -163,19 +237,7 @@ export function FlashSale() {
               </h2>
 
               {/* Digit Countdown Timer */}
-              <div className="flex items-center gap-1 sm:ml-2">
-                <span className="bg-black/80 text-white text-[10px] sm:text-sm font-bold px-1.5 py-0.5 rounded min-w-[20px] text-center shadow-inner">
-                  {String(timeLeft.hours).padStart(2, '0')}
-                </span>
-                <span className="text-white font-bold text-xs sm:text-sm">:</span>
-                <span className="bg-black/80 text-white text-[10px] sm:text-sm font-bold px-1.5 py-0.5 rounded min-w-[20px] text-center shadow-inner">
-                  {String(timeLeft.minutes).padStart(2, '0')}
-                </span>
-                <span className="text-white font-bold text-xs sm:text-sm">:</span>
-                <span className="bg-black/80 text-white text-[10px] sm:text-sm font-bold px-1.5 py-0.5 rounded min-w-[20px] text-center shadow-inner">
-                  {String(timeLeft.seconds).padStart(2, '0')}
-                </span>
-              </div>
+              <CountdownTimer endAt={campaign.end_at} />
             </div>
 
             <Link
@@ -190,7 +252,7 @@ export function FlashSale() {
           <div className="relative group/slider">
 
             {/* Left Navigation Arrow */}
-            {displayItems.length > 0 && (
+            {displayItems.length > 0 && canScrollLeft && (
               <button
                 onClick={() => scroll('left')}
                 className="absolute -left-3 sm:-left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white text-[#7a9e8e] hover:text-[#5a7a6b] shadow-xl flex items-center justify-center transition-all opacity-0 group-hover/slider:opacity-100 duration-200 cursor-pointer border border-gray-100 hover:scale-105"
@@ -203,9 +265,11 @@ export function FlashSale() {
             {/* Horizontal Scroll Track */}
             <div
               ref={scrollRef}
+              onScroll={checkScroll}
               className="flex overflow-x-auto no-scrollbar gap-2 sm:gap-3.5 pb-1 px-1 sm:px-0 scroll-smooth snap-x snap-mandatory"
             >
               {displayItems.map((product) => {
+                console.log("product id:", product.id);
                 const activeFlashSaleItem = product.flash_sale_items?.reduce((min, curr) => {
                   return (!min || curr.sale_price < min.sale_price) ? curr : min;
                 }, null as typeof product.flash_sale_items[0] | null);
@@ -287,10 +351,43 @@ export function FlashSale() {
                   </Link>
                 );
               })}
+
+              {/* NÚT LOAD MORE CƯỠNG ÉP - Nếu có trang tiếp là PHẢI HIỆN */}
+              {hasNextPage && (
+                <div className="shrink-0 w-[160px] flex flex-col items-center justify-center p-4 border-l border-white/10 bg-white/5">
+                  <button
+                    onClick={() => {
+                      console.log('[FlashSale] Người dùng nhấn nút Load More thủ công');
+                      fetchNextPage();
+                    }}
+                    disabled={isFetchingNextPage}
+                    className="flex flex-col items-center gap-3 group"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-[#7a9e8e] flex items-center justify-center group-hover:bg-[#5a7a6b] transition-all shadow-2xl scale-110">
+                      {isFetchingNextPage ? (
+                        <Loader2 className="w-7 h-7 text-white animate-spin" />
+                      ) : (
+                        <ChevronRight className="w-9 h-9 text-white" />
+                      )}
+                    </div>
+                    <div className="text-center">
+                       <p className="text-white text-[11px] font-black uppercase tracking-tighter">Bấm để tải thêm</p>
+                       <p className="text-white/60 text-[9px] italic">Trang tiếp theo</p>
+                    </div>
+                  </button>
+                </div>
+              )}
+
+              {/* Loader ẩn nếu đang tự động tải */}
+              {isFetchingNextPage && !hasNextPage && (
+                <div className="shrink-0 w-20 flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                </div>
+              )}
             </div>
 
             {/* Right Navigation Arrow */}
-            {displayItems.length > 0 && (
+            {displayItems.length > 0 && canScrollRight && (
               <button
                 onClick={() => scroll('right')}
                 className="absolute -right-3 sm:-right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white text-[#7a9e8e] hover:text-[#5a7a6b] shadow-xl flex items-center justify-center transition-all opacity-0 group-hover/slider:opacity-100 duration-200 cursor-pointer border border-gray-100 hover:scale-105"
