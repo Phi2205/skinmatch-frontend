@@ -90,11 +90,11 @@ export function Hero() {
         </div>
 
         {/* Main Content Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end relativev mt-14">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end relativev mt-10">
           {/* Center: Woman Image */}
           <div className="md:col-span-6 order-1 md:order-2 flex flex-col items-center relative -mt-5 translate-x-1/2 z-20">
             <motion.div
-              className="relative w-full ms-50 aspect-[4/5] max-w-[370px] h-[460px] rounded-[40px] shadow-2xl border-[25px] border-white/20 group bg-[#eef4e8] overflow-visible"
+              className="relative w-full ms-50 aspect-[4/5] max-w-[310px] h-[390px] rounded-[30px] shadow-2xl border-[18px] border-white/20 group bg-[#eef4e8] overflow-visible"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.5, duration: 0.35 }}
@@ -104,7 +104,7 @@ export function Hero() {
                 alt="Woman with natural glowing skin"
                 fill
                 priority
-                className="z-20 object-cover mt-6 object-bottom scale-[1.3] -ms-12 origin-bottom transition-transform duration-500 group-hover:scale-[1.38]"
+                className="z-20 object-cover mt-4 object-bottom scale-[1.2] -ms-11 origin-bottom transition-transform duration-500 group-hover:scale-[1.28]"
               />
             </motion.div>
 
@@ -121,7 +121,7 @@ export function Hero() {
                 borderOpacity={0.3}
                 borderRadius={20}
                 variant="none"
-                className="w-36 md:w-50 md:h-75 p-6 shadow-2xl transition-all duration-300"
+                className="w-32 md:w-42 md:h-64 p-5 shadow-2xl transition-all duration-300"
               >
                 <motion.div
                   className="relative aspect-square w-full mb-4 -mt-10"
@@ -134,14 +134,14 @@ export function Hero() {
                       src="/image-product-demo.png"
                       alt="Liora Face Cream tube"
                       fill
-                      className="object-contain scale-250 drop-shadow-lg hover:scale-280 transition-transform duration-500"
+                      className="object-contain scale-200 drop-shadow-lg hover:scale-225 transition-transform duration-500"
                     />
                   </Link>
                 </motion.div>
                 <motion.div
-                  className="text-center space-y-1 mt-23"
+                  className="text-center space-y-1 mt-16"
                 >
-                  <p className="text-md md:text-md font-bold text-white/80 pt-2 leading-tight flex flex-wrap justify-center">
+                  <p className="text-sm md:text-sm font-bold text-white/80 pt-2 leading-tight flex flex-wrap justify-center">
                     {"Pure care, power from nature.".split(" ").map((word, i) => (
                       <motion.span
                         key={i}
