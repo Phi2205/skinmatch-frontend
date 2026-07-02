@@ -58,6 +58,8 @@ axiosInstance.interceptors.response.use(
                     document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                     document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                     document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    document.cookie = "user_role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
                     // Show notification và redirect sau khi user đóng thông báo
                     window.confirm('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
