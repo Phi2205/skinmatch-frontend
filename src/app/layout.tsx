@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import StoreProvider from '@/shared/providers/store-provider'
 import { CartProvider } from '@/modules/cart/hooks/useCart'
 import { AuthProvider } from '@/contexts/authContext'
 import QueryProvider from '@/shared/providers/query-provider'
@@ -43,16 +44,19 @@ export default function RootLayout({
     <html lang="vi" className="bg-background" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-background pt-[60px] md:pt-0 pb-20 md:pb-0`}>
         <QueryProvider>
-          <AuthProvider>
-            <CartProvider>
-              {children}
-              <ChatbotWidget />
-              <Toaster position="top-right" richColors />
-              {process.env.NODE_ENV === 'production' && <Analytics />}
-            </CartProvider>
-          </AuthProvider>
+          <StoreProvider>
+            <AuthProvider>
+              <CartProvider>
+                {children}
+                <ChatbotWidget />
+                <Toaster position="top-right" richColors />
+                {process.env.NODE_ENV === 'production' && <Analytics />}
+              </CartProvider>
+            </AuthProvider>
+          </StoreProvider>
         </QueryProvider>
       </body>
     </html>
   )
 }
+
